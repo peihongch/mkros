@@ -1,13 +1,14 @@
 OUTPUT_ARCH( "riscv" )
 ENTRY( _entry )
+BASE_ADDRESS = 0x80000000;
 
 SECTIONS
 {
   /*
-   * ensure that entry.S / _entry is at 0x80000000,
+   * ensure that entry.S / _entry is at BASE_ADDRESS,
    * where qemu's -kernel jumps.
    */
-  . = 0x80000000;
+  . = BASE_ADDRESS;
 
   .text : {
     *(.text .text.*)

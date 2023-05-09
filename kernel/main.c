@@ -1,26 +1,30 @@
+#include "defs.h"
+#include "memlayout.h"
+#include "param.h"
+#include "riscv.h"
 #include "types.h"
 
-#define UART 0x10000000
-#define UART_THR (uint8_t*)(UART + 0x00)  // THR:transmitter holding register
-#define UART_LSR (uint8_t*)(UART + 0x05)  // LSR:line status register
-#define UART_LSR_EMPTY_MASK \
-    0x40  // LSR Bit 6: Transmitter empty; both the THR and LSR are empty
-
-int lib_putc(char ch) {
-    while ((*UART_LSR & UART_LSR_EMPTY_MASK) == 0)
-        ;
-    return *UART_THR = ch;
-}
-
-void lib_puts(char* s) {
-    while (*s)
-        lib_putc(*s++);
-}
+volatile static int started = 0;
 
 // start() jumps here in supervisor mode on all CPUs.
 int main() {
-    lib_puts("Hello OS!\n");
+    if (cpuid() == 0) {
+        consoleinit();
+        printfinit();
+        printf("\n");
+        printf("xv6 kernel is booting\n");
+        printf("\n");
+        __sync_synchronize();
+        started = 1;
+    } else {
+        while (started == 0)
+            ;
+        __sync_synchronize();
+        printf("hart %d starting\n", cpuid());
+    }
+
     while (1) {
     }
+
     return 0;
 }

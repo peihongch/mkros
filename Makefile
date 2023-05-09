@@ -3,8 +3,32 @@ K=kernel
 OBJS = \
   $K/entry.o \
   $K/start.o \
-  $K/kernelvec.o \
+  $K/console.o \
+  $K/printf.o \
+  $K/uart.o \
+  $K/kalloc.o \
+  $K/spinlock.o \
+  $K/string.o \
   $K/main.o \
+  $K/vm.o \
+  $K/cpu.o \
+  $K/proc.o \
+  $K/swtch.o \
+  $K/trampoline.o \
+  $K/trap.o \
+  $K/syscall.o \
+  $K/sysproc.o \
+  $K/bio.o \
+  $K/fs.o \
+  $K/log.o \
+  $K/sleeplock.o \
+  $K/file.o \
+  $K/pipe.o \
+  $K/exec.o \
+  $K/sysfile.o \
+  $K/kernelvec.o \
+  $K/plic.o \
+  $K/virtio_disk.o
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
@@ -36,7 +60,7 @@ CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
-CFLAGS += -I.
+CFLAGS += -I$(CURDIR)/include
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
@@ -49,12 +73,17 @@ endif
 
 LDFLAGS = -z max-page-size=4096
 
+ASFLAGS += -I$(CURDIR)/include
+
+$K/kernel.bin: $K/kernel
+	$(OBJCOPY) --strip-all $< -O binary $@
+
 $K/kernel: $(OBJS) $K/kernel.ld
 	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) 
 
 clean: 
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
-	*/*.o */*.d */*.asm */*.sym $K/kernel
+	*/*.o */*.d */*.asm */*.sym $K/kernel $K/kernel.bin
 
 ifndef CPUS
 CPUS := 8

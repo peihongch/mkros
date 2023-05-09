@@ -1,0 +1,12 @@
+{
+    "clang-tidy.compilerArgs": [
+        "-std=gnu23",
+        "-I${workspaceFolder}/include"
+    ],
+    "files.associations": {
+        "types.h": "c",
+        "fs.h": "c",
+        "defs.h": "c",
+        "memlayout.h": "c"
+    }
+}
