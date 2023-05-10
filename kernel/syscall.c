@@ -9,7 +9,7 @@
 
 // Fetch the uint64_t at addr from the current process.
 int fetchaddr(uint64_t addr, uint64_t* ip) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
     if (addr >= p->sz || addr + sizeof(uint64_t) >
                              p->sz)  // both tests needed, in case of overflow
         return -1;
@@ -21,14 +21,14 @@ int fetchaddr(uint64_t addr, uint64_t* ip) {
 // Fetch the nul-terminated string at addr from the current process.
 // Returns length of string, not including nul, or -1 for error.
 int fetchstr(uint64_t addr, char* buf, int max) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
     if (copyinstr(p->pagetable, buf, addr, max) < 0)
         return -1;
     return strlen(buf);
 }
 
 static uint64_t argraw(int n) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
     switch (n) {
         case 0:
             return p->trapframe->a0;
@@ -105,7 +105,7 @@ static uint64_t (*syscalls[])(void) = {
 
 void syscall(void) {
     int num;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     num = p->trapframe->a7;
     if (num > 0 && num < NELEM(syscalls) && syscalls[num]) {
@@ -113,7 +113,7 @@ void syscall(void) {
         // and store its return value in p->trapframe->a0
         p->trapframe->a0 = syscalls[num]();
     } else {
-        printf("%d %s: unknown sys call %d\n", p->pid, p->name, num);
+        printk("%d %s: unknown sys call %d\n", p->pid, p->name, num);
         p->trapframe->a0 = -1;
     }
 }

@@ -4,7 +4,7 @@ OBJS = \
   $K/entry.o \
   $K/start.o \
   $K/console.o \
-  $K/printf.o \
+  $K/printk.o \
   $K/uart.o \
   $K/kalloc.o \
   $K/spinlock.o \
@@ -60,6 +60,7 @@ CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
+CFLAGS += -lfdt
 CFLAGS += -I$(CURDIR)/include
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 

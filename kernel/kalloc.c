@@ -42,7 +42,8 @@ void freerange(void* pa_start, void* pa_end) {
 void kfree(void* pa) {
     struct run* r;
 
-    if (((uint64_t)pa % PGSIZE) != 0 || (char*)pa < end || (uint64_t)pa >= PHYSTOP)
+    if (((uint64_t)pa % PGSIZE) != 0 || (char*)pa < end ||
+        (uint64_t)pa >= PHYSTOP)
         panic("kfree");
 
     // Fill with junk to catch dangling refs.

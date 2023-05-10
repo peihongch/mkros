@@ -23,7 +23,7 @@ static int argfd(int n, int* pfd, struct file** pf) {
     struct file* f;
 
     argint(n, &fd);
-    if (fd < 0 || fd >= NOFILE || (f = myproc()->ofile[fd]) == 0)
+    if (fd < 0 || fd >= NOFILE || (f = this_proc()->ofile[fd]) == 0)
         return -1;
     if (pfd)
         *pfd = fd;
@@ -36,7 +36,7 @@ static int argfd(int n, int* pfd, struct file** pf) {
 // Takes over file reference from caller on success.
 static int fdalloc(struct file* f) {
     int fd;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     for (fd = 0; fd < NOFILE; fd++) {
         if (p->ofile[fd] == 0) {
@@ -90,7 +90,7 @@ uint64_t sys_close(void) {
 
     if (argfd(0, &fd, &f) < 0)
         return -1;
-    myproc()->ofile[fd] = 0;
+    this_proc()->ofile[fd] = 0;
     fileclose(f);
     return 0;
 }
@@ -381,7 +381,7 @@ uint64_t sys_mknod(void) {
 uint64_t sys_chdir(void) {
     char path[MAXPATH];
     struct inode* ip;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     begin_op();
     if (argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0) {
@@ -446,7 +446,7 @@ uint64_t sys_pipe(void) {
     uint64_t fdarray;  // user pointer to array of two integers
     struct file *rf, *wf;
     int fd0, fd1;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     argaddr(0, &fdarray);
     if (pipealloc(&rf, &wf) < 0)

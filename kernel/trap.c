@@ -39,7 +39,7 @@ void usertrap(void) {
     // since we're now in the kernel.
     w_stvec((uint64_t)kernelvec);
 
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     // save user program counter.
     p->trapframe->epc = r_sepc();
@@ -62,8 +62,8 @@ void usertrap(void) {
     } else if ((which_dev = devintr()) != 0) {
         // ok
     } else {
-        printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
-        printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
+        printk("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
+        printk("            sepc=%p stval=%p\n", r_sepc(), r_stval());
         setkilled(p);
     }
 
@@ -81,7 +81,7 @@ void usertrap(void) {
 // return to user space
 //
 void usertrapret(void) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     // we're about to switch the destination of traps from
     // kerneltrap() to usertrap(), so turn off interrupts until
@@ -135,13 +135,13 @@ void kerneltrap() {
         panic("kerneltrap: interrupts enabled");
 
     if ((which_dev = devintr()) == 0) {
-        printf("scause %p\n", scause);
-        printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
+        printk("scause %p\n", scause);
+        printk("sepc=%p stval=%p\n", r_sepc(), r_stval());
         panic("kerneltrap");
     }
 
     // give up the CPU if this is a timer interrupt.
-    if (which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
+    if (which_dev == 2 && this_proc() != 0 && this_proc()->state == RUNNING)
         yield();
 
     // the yield() may have caused some traps to occur,
@@ -176,7 +176,7 @@ int devintr() {
         } else if (irq == VIRTIO0_IRQ) {
             virtio_disk_intr();
         } else if (irq) {
-            printf("unexpected interrupt irq=%d\n", irq);
+            printk("unexpected interrupt irq=%d\n", irq);
         }
 
         // the PLIC allows each device to raise at most one

@@ -76,7 +76,7 @@ static uint balloc(uint dev) {
         }
         brelse(bp);
     }
-    printf("balloc: out of blocks\n");
+    printk("balloc: out of blocks\n");
     return 0;
 }
 
@@ -201,7 +201,7 @@ struct inode* ialloc(uint dev, short type) {
         }
         brelse(bp);
     }
-    printf("ialloc: no inodes\n");
+    printk("ialloc: no inodes\n");
     return 0;
 }
 
@@ -609,7 +609,7 @@ static struct inode* namex(char* path, int nameiparent, char* name) {
     if (*path == '/')
         ip = iget(ROOTDEV, ROOTINO);
     else
-        ip = idup(myproc()->cwd);
+        ip = idup(this_proc()->cwd);
 
     while ((path = skipelem(path, name)) != 0) {
         ilock(ip);

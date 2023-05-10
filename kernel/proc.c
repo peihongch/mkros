@@ -53,9 +53,9 @@ void procinit(void) {
 }
 
 // Return the current struct proc *, or zero if none.
-struct proc* myproc(void) {
+struct proc* this_proc(void) {
     push_off();
-    struct cpu* c = mycpu();
+    struct cpu* c = this_cpu();
     struct proc* p = c->proc;
     pop_off();
     return p;
@@ -215,7 +215,7 @@ void userinit(void) {
 // Return 0 on success, -1 on failure.
 int growproc(int n) {
     uint64_t sz;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     sz = p->sz;
     if (n > 0) {
@@ -234,7 +234,7 @@ int growproc(int n) {
 int fork(void) {
     int i, pid;
     struct proc* np;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     // Allocate process.
     if ((np = allocproc()) == 0) {
@@ -295,7 +295,7 @@ void reparent(struct proc* p) {
 // An exited process remains in the zombie state
 // until its parent calls wait().
 void exit(int status) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     if (p == initproc)
         panic("init exiting");
@@ -339,7 +339,7 @@ void exit(int status) {
 int wait(uint64_t addr) {
     struct proc* pp;
     int havekids, pid;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     acquire(&wait_lock);
 
@@ -391,7 +391,7 @@ int wait(uint64_t addr) {
 //    via swtch back to the scheduler.
 void scheduler(void) {
     struct proc* p;
-    struct cpu* c = mycpu();
+    struct cpu* c = this_cpu();
 
     c->proc = 0;
     for (;;) {
@@ -426,25 +426,25 @@ void scheduler(void) {
 // there's no process.
 void sched(void) {
     int intena;
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     if (!holding(&p->lock))
         panic("sched p->lock");
-    if (mycpu()->noff != 1)
+    if (this_cpu()->noff != 1)
         panic("sched locks");
     if (p->state == RUNNING)
         panic("sched running");
     if (intr_get())
         panic("sched interruptible");
 
-    intena = mycpu()->intena;
-    swtch(&p->context, &mycpu()->context);
-    mycpu()->intena = intena;
+    intena = this_cpu()->intena;
+    swtch(&p->context, &this_cpu()->context);
+    this_cpu()->intena = intena;
 }
 
 // Give up the CPU for one scheduling round.
 void yield(void) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
     acquire(&p->lock);
     p->state = RUNNABLE;
     sched();
@@ -457,7 +457,7 @@ void forkret(void) {
     static int first = 1;
 
     // Still holding p->lock from scheduler.
-    release(&myproc()->lock);
+    release(&this_proc()->lock);
 
     if (first) {
         // File system initialization must be run in the context of a
@@ -473,7 +473,7 @@ void forkret(void) {
 // Atomically release lock and sleep on chan.
 // Reacquires lock when awakened.
 void sleep(void* chan, struct spinlock* lk) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
 
     // Must acquire p->lock in order to
     // change p->state and then call sched.
@@ -505,7 +505,7 @@ void wakeup(void* chan) {
     struct proc* p;
 
     for (p = proc; p < &proc[NPROC]; p++) {
-        if (p != myproc()) {
+        if (p != this_proc()) {
             acquire(&p->lock);
             if (p->state == SLEEPING && p->chan == chan) {
                 p->state = RUNNABLE;
@@ -556,7 +556,7 @@ int killed(struct proc* p) {
 // depending on usr_dst.
 // Returns 0 on success, -1 on error.
 int either_copyout(int user_dst, uint64_t dst, void* src, uint64_t len) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
     if (user_dst) {
         return copyout(p->pagetable, dst, src, len);
     } else {
@@ -569,7 +569,7 @@ int either_copyout(int user_dst, uint64_t dst, void* src, uint64_t len) {
 // depending on usr_src.
 // Returns 0 on success, -1 on error.
 int either_copyin(void* dst, int user_src, uint64_t src, uint64_t len) {
-    struct proc* p = myproc();
+    struct proc* p = this_proc();
     if (user_src) {
         return copyin(p->pagetable, dst, src, len);
     } else {
@@ -588,7 +588,7 @@ void procdump(void) {
     struct proc* p;
     char* state;
 
-    printf("\n");
+    printk("\n");
     for (p = proc; p < &proc[NPROC]; p++) {
         if (p->state == UNUSED)
             continue;
@@ -596,7 +596,7 @@ void procdump(void) {
             state = states[p->state];
         else
             state = "???";
-        printf("%d %s %s", p->pid, state, p->name);
-        printf("\n");
+        printk("%d %s %s", p->pid, state, p->name);
+        printk("\n");
     }
 }

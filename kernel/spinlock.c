@@ -10,8 +10,8 @@
 
 void initlock(struct spinlock* lk, char* name) {
     lk->name = name;
-    lk->locked = 0;
-    lk->cpu = 0;
+    lk->locked = 0;  // indicating that the lock is initially not held
+    lk->cpu = 0;     // indicating that no processor currently holds the lock
 }
 
 // Acquire the lock.
@@ -21,6 +21,10 @@ void acquire(struct spinlock* lk) {
     if (holding(lk))
         panic("acquire");
 
+    // _sync_lock_test_and_set() is a built-in function that 
+    // provides an atomic memory operation to set a lock and 
+    // return the previous value of the lock atomically.
+    // 
     // On RISC-V, sync_lock_test_and_set turns into an atomic swap:
     //   a5 = 1
     //   s1 = &lk->locked
@@ -35,7 +39,7 @@ void acquire(struct spinlock* lk) {
     __sync_synchronize();
 
     // Record info about lock acquisition for holding() and debugging.
-    lk->cpu = mycpu();
+    lk->cpu = this_cpu();
 }
 
 // Release the lock.
@@ -68,9 +72,7 @@ void release(struct spinlock* lk) {
 // Check whether this cpu is holding the lock.
 // Interrupts must be off.
 int holding(struct spinlock* lk) {
-    int r;
-    r = (lk->locked && lk->cpu == mycpu());
-    return r;
+    return (lk->locked && lk->cpu == this_cpu());
 }
 
 // push_off/pop_off are like intr_off()/intr_on() except that they are matched:
@@ -81,13 +83,13 @@ void push_off(void) {
     int old = intr_get();
 
     intr_off();
-    if (mycpu()->noff == 0)
-        mycpu()->intena = old;
-    mycpu()->noff += 1;
+    if (this_cpu()->noff == 0)
+        this_cpu()->intena = old;
+    this_cpu()->noff += 1;
 }
 
 void pop_off(void) {
-    struct cpu* c = mycpu();
+    struct cpu* c = this_cpu();
     if (intr_get())
         panic("pop_off - interruptible");
     if (c->noff < 1)

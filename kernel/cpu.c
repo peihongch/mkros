@@ -14,7 +14,7 @@ int cpuid() {
 
 // Return this CPU's cpu struct.
 // Interrupts must be disabled.
-struct cpu* mycpu(void) {
+struct cpu* this_cpu(void) {
     int id = cpuid();
     struct cpu* c = &cpus[id];
     return c;

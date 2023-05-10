@@ -27,7 +27,7 @@
 
 //
 // send one character to the uart.
-// called by printf(), and to echo input characters,
+// called by printk(), and to echo input characters,
 // but not from write().
 //
 void consputc(int c) {
@@ -85,7 +85,7 @@ int consoleread(int user_dst, uint64_t dst, int n) {
         // wait until interrupt handler has put some
         // input into cons.buffer.
         while (cons.r == cons.w) {
-            if (killed(myproc())) {
+            if (killed(this_proc())) {
                 release(&cons.lock);
                 return -1;
             }

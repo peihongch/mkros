@@ -14,7 +14,7 @@ uint64_t sys_exit(void) {
 }
 
 uint64_t sys_getpid(void) {
-    return myproc()->pid;
+    return this_proc()->pid;
 }
 
 uint64_t sys_fork(void) {
@@ -32,7 +32,7 @@ uint64_t sys_sbrk(void) {
     int n;
 
     argint(0, &n);
-    addr = myproc()->sz;
+    addr = this_proc()->sz;
     if (growproc(n) < 0)
         return -1;
     return addr;
@@ -46,7 +46,7 @@ uint64_t sys_sleep(void) {
     acquire(&tickslock);
     ticks0 = ticks;
     while (ticks - ticks0 < n) {
-        if (killed(myproc())) {
+        if (killed(this_proc())) {
             release(&tickslock);
             return -1;
         }
