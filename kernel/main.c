@@ -81,6 +81,7 @@ void sys_info() {
     printk("data section:\t[%p ~ %p]\n", sdata, edata);
     printk("bss section: \t[%p ~ %p]\n", sbss, ebss);
     printk("PhyMem Avail:\t[%p ~ %p]\n", end, (void*)PHYSTOP);
+    printk("\n");
 
     /* clang-format on */
 }

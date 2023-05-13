@@ -1,4 +1,5 @@
 K=kernel
+BUILD=build
 
 OBJS = \
   $K/entry.o \
@@ -57,11 +58,12 @@ LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
+OPENSBI = ./bootloader/opensbi.bin
+
 CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
-CFLAGS += -lfdt
 CFLAGS += -I$(CURDIR)/include
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
@@ -77,21 +79,33 @@ LDFLAGS = -z max-page-size=4096
 
 ASFLAGS += -I$(CURDIR)/include
 
-$K/kernel.bin: $K/kernel
+all: build
+
+# Compile Kernel
+$(BUILD)/kernel: $(OBJS) $(linker)
+	@if [ ! -d "./$(BUILD)" ]; then mkdir $(BUILD); fi
+	@$(LD) $(LDFLAGS) -T $(linker) -o $(BUILD)/kernel $(OBJS)
+	@$(OBJDUMP) -S $(BUILD)/kernel > $(BUILD)/kernel.asm
+	@$(OBJDUMP) -t $(BUILD)/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
+
+$(BUILD)/kernel.bin: $(BUILD)/kernel
 	$(OBJCOPY) --strip-all $< -O binary $@
 
-$K/kernel: $(OBJS)
-	$(LD) $(LDFLAGS) -T $(linker) -o $K/kernel $(OBJS) 
-
+build: $(BUILD)/kernel.bin
+  
 clean: 
-	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
-	*/*.o */*.d */*.asm */*.sym $K/kernel $K/kernel.bin
+	rm -rf *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
+	*/*.o */*.d */*.asm */*.sym $(BUILD)
 
 ifndef CPUS
 CPUS := 8
 endif
 
-QEMUOPTS = -machine virt -kernel $K/kernel -m 32M -smp $(CPUS) -nographic
-
-qemu: $K/kernel
+QEMUOPTS = -machine virt -kernel $(BUILD)/kernel -m 32M -nographic
+# use multi-core 
+QEMUOPTS += -smp $(CPUS)
+# use opensbi bootloader (fw_dynamic.bin)
+QEMUOPTS += -bios $(OPENSBI)
+	
+run: build
 	$(QEMU) $(QEMUOPTS)
