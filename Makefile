@@ -2,9 +2,9 @@ K=kernel
 
 OBJS = \
   $K/entry.o \
-  $K/start.o \
   $K/console.o \
   $K/printk.o \
+  $K/timer.o \
   $K/uart.o \
   $K/kalloc.o \
   $K/spinlock.o \
@@ -49,6 +49,7 @@ TOOLPREFIX := $(shell if riscv64-unknown-elf-objdump -i 2>&1 | grep 'elf64-big' 
 endif
 
 QEMU = qemu-system-riscv64
+linker = ./linker/qemu.ld
 
 CC = $(TOOLPREFIX)gcc
 AS = $(TOOLPREFIX)gas
@@ -79,8 +80,8 @@ ASFLAGS += -I$(CURDIR)/include
 $K/kernel.bin: $K/kernel
 	$(OBJCOPY) --strip-all $< -O binary $@
 
-$K/kernel: $(OBJS) $K/kernel.ld
-	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) 
+$K/kernel: $(OBJS)
+	$(LD) $(LDFLAGS) -T $(linker) -o $K/kernel $(OBJS) 
 
 clean: 
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
@@ -90,7 +91,7 @@ ifndef CPUS
 CPUS := 8
 endif
 
-QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
+QEMUOPTS = -machine virt -kernel $K/kernel -m 32M -smp $(CPUS) -nographic
 
 qemu: $K/kernel
 	$(QEMU) $(QEMUOPTS)

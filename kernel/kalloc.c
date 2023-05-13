@@ -21,11 +21,16 @@ struct run {
 struct {
     struct spinlock lock;
     struct run* freelist;
+    uint64_t npage;
 } kmem;
 
 void kinit() {
     initlock(&kmem.lock, "kmem");
+    kmem.freelist = 0;
+    kmem.npage = 0;
     freerange(end, (void*)PHYSTOP);
+    pr_info("kernel_end: %p, phystop: %p", end, (void*)PHYSTOP);
+    pr_info("kinit");
 }
 
 void freerange(void* pa_start, void* pa_end) {
@@ -54,6 +59,7 @@ void kfree(void* pa) {
     acquire(&kmem.lock);
     r->next = kmem.freelist;
     kmem.freelist = r;
+    kmem.npage++;
     release(&kmem.lock);
 }
 
@@ -65,11 +71,17 @@ void* kalloc(void) {
 
     acquire(&kmem.lock);
     r = kmem.freelist;
-    if (r)
+    if (r) {
         kmem.freelist = r->next;
+        kmem.npage--;
+    }
     release(&kmem.lock);
 
     if (r)
         memset((char*)r, 5, PGSIZE);  // fill with junk
     return (void*)r;
+}
+
+uint64_t freemem_amount(void) {
+    return kmem.npage << PGSHIFT;
 }

@@ -27,6 +27,11 @@ void consoleinit(void);
 void consoleintr(int);
 void consputc(int);
 
+// timer.c
+void timerinit();
+void set_next_timeout();
+void timer_tick();
+
 // exec.c
 int exec(char*, char**);
 
@@ -85,6 +90,13 @@ int pipewrite(struct pipe*, uint64_t, int);
 void printk(char*, ...);
 void panic(char*) __attribute__((noreturn));
 void printkinit(void);
+
+#define pr_info(fmt, ...) \
+    printk("[ INFO][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define pr_warn(fmt, ...) \
+    printk("[ WARN][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define pr_error(fmt, ...) \
+    printk("[ERROR][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
 // proc.c
 int cpuid(void);

@@ -3,11 +3,9 @@
 #include "param.h"
 #include "proc.h"
 #include "riscv.h"
+#include "sbi.h"
 #include "spinlock.h"
 #include "types.h"
-
-struct spinlock tickslock;
-uint ticks;
 
 extern char trampoline[], uservec[], userret[];
 
@@ -16,13 +14,14 @@ void kernelvec();
 
 extern int devintr();
 
-void trapinit(void) {
-    initlock(&tickslock, "time");
-}
-
 // set up to take exceptions and traps while in the kernel.
 void trapinithart(void) {
     w_stvec((uint64_t)kernelvec);
+    w_sstatus(r_sstatus() | SSTATUS_SIE);
+    // enable supervisor-mode timer interrupts.
+    w_sie(r_sie() | SIE_SEIE | SIE_SSIE | SIE_STIE);
+    set_next_timeout();
+    pr_info("trapinithart");
 }
 
 //
@@ -150,56 +149,55 @@ void kerneltrap() {
     w_sstatus(sstatus);
 }
 
-void clockintr() {
-    acquire(&tickslock);
-    ticks++;
-    wakeup(&ticks);
-    release(&tickslock);
-}
-
 // check if it's an external interrupt or software interrupt,
 // and handle it.
-// returns 2 if timer interrupt,
+// returns 3 if software interrupt
+// 2 if timer interrupt,
 // 1 if other device,
 // 0 if not recognized.
 int devintr() {
     uint64_t scause = r_scause();
 
-    if ((scause & 0x8000000000000000L) && (scause & 0xff) == 9) {
-        // this is a supervisor external interrupt, via PLIC.
+    if (scause & SCAUSE_INTERRUPT) {
+        switch (scause) {
+            case SCAUSE_SSI:
+                // software interrupt
+                return 3;
 
-        // irq indicates which device interrupted.
-        int irq = plic_claim();
+            case SCAUSE_STI:
+                timer_tick();
+                return 2;
 
-        if (irq == UART0_IRQ) {
-            uartintr();
-        } else if (irq == VIRTIO0_IRQ) {
-            virtio_disk_intr();
-        } else if (irq) {
-            printk("unexpected interrupt irq=%d\n", irq);
+            case SCAUSE_SEI:
+                // this is a supervisor external interrupt, via PLIC.
+
+                // irq indicates which device interrupted.
+                int irq = plic_claim();
+
+                if (irq == UART0_IRQ) {
+                    // keyboard input
+                    int c = sbi_ecall_console_getc();
+                    if (-1 != c) {
+                        consoleintr(c);
+                    }
+                } else if (irq == VIRTIO0_IRQ) {
+                    virtio_disk_intr();
+                } else if (irq) {
+                    printk("unexpected interrupt irq=%d\n", irq);
+                }
+
+                // the PLIC allows each device to raise at most one
+                // interrupt at a time; tell the PLIC the device is
+                // now allowed to interrupt again.
+                if (irq)
+                    plic_complete(irq);
+
+                return 1;
+
+            default:
+                return 0;
         }
-
-        // the PLIC allows each device to raise at most one
-        // interrupt at a time; tell the PLIC the device is
-        // now allowed to interrupt again.
-        if (irq)
-            plic_complete(irq);
-
-        return 1;
-    } else if (scause == 0x8000000000000001L) {
-        // software interrupt from a machine-mode timer interrupt,
-        // forwarded by timervec in kernelvec.S.
-
-        if (cpuid() == 0) {
-            clockintr();
-        }
-
-        // acknowledge the software interrupt by clearing
-        // the SSIP bit in sip.
-        w_sip(r_sip() & ~2);
-
-        return 2;
-    } else {
-        return 0;
     }
+
+    return 0;
 }

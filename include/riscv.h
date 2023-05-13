@@ -4,6 +4,8 @@
 #ifndef __ASSEMBLER__
 #include "types.h"
 
+/* clang-format off */
+
 /**
  * References:
  * - https://dingfen.github.io/risc-v/2020/08/05/riscv-privileged.html
@@ -371,6 +373,28 @@ static inline void w_mscratch(uint64_t x) {
 }
 
 // Supervisor Trap Cause
+
+// Interrupts
+#define SCAUSE_INTERRUPT 0x8000000000000000L
+#define SCAUSE_SSI (SCAUSE_INTERRUPT | 0x1L)  // Supervisor software interrupt
+#define SCAUSE_STI (SCAUSE_INTERRUPT | 0x5L)  // Supervisor timer interrupt
+#define SCAUSE_SEI (SCAUSE_INTERRUPT | 0x9L)  // Supervisor external interrupt
+
+// Exceptions
+#define SCAUSE_IAM 0x0L // Instruction address misaligned
+#define SCAUSE_IAF 0x1L // Instruction access fault
+#define SCAUSE_II 0x2L  // Illegal instruction
+#define SCAUSE_BP 0x3L  // Breakpoint
+#define SCAUSE_LAM 0x4L // Load address misaligned
+#define SCAUSE_LAF 0x5L // Load access fault
+#define SCAUSE_SAM 0x6L // Store/AMO address misaligned
+#define SCAUSE_SAF 0x7L // Store/AMO access fault
+#define SCAUSE_ECU 0x8L // Environment call from U-mode
+#define SCAUSE_ECS 0x9L // Environment call from S-mode
+#define SCAUSE_IPF 0xCL // Instruction page fault
+#define SCAUSE_LPF 0xDL // Load page fault
+#define SCAUSE_SPF 0xFL // Store/AMO page fault
+
 static inline uint64_t r_scause() {
     uint64_t x;
     asm volatile("csrr %0, scause" : "=r"(x));
