@@ -3,7 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/include"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/lib"
             ],
             "defines": [],
             "compilerPath": "/usr/local/bin/riscv64-unknown-elf-gcc",
@@ -12,7 +13,8 @@
             "intelliSenseMode": "gcc-x64",
             "browse": {
                 "path": [
-                    "${workspaceFolder}/include"
+                    "${workspaceFolder}/include",
+                    "${workspaceFolder}/lib"
                 ]
             },
             "configurationProvider": "ms-vscode.makefile-tools"

@@ -31,6 +31,13 @@ OBJS = \
   $K/plic.o \
   $K/virtio_disk.o
 
+LIBFDT = \
+  lib/libfdt/fdt.o \
+  lib/libfdt/fdt_ro.o
+
+SBI = \
+  lib/sbi/sbi_string.o
+
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
 #TOOLPREFIX = 
@@ -65,6 +72,7 @@ CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += -I$(CURDIR)/include
+CFLAGS += -I$(CURDIR)/lib
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
@@ -82,9 +90,9 @@ ASFLAGS += -I$(CURDIR)/include
 all: build
 
 # Compile Kernel
-$(BUILD)/kernel: $(OBJS) $(linker)
+$(BUILD)/kernel: $(OBJS) $(LIBFDT) $(SBI) $(linker)
 	@if [ ! -d "./$(BUILD)" ]; then mkdir $(BUILD); fi
-	@$(LD) $(LDFLAGS) -T $(linker) -o $(BUILD)/kernel $(OBJS)
+	@$(LD) $(LDFLAGS) -T $(linker) -o $(BUILD)/kernel $(OBJS) $(LIBFDT) $(SBI)
 	@$(OBJDUMP) -S $(BUILD)/kernel > $(BUILD)/kernel.asm
 	@$(OBJDUMP) -t $(BUILD)/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
 
@@ -95,17 +103,26 @@ build: $(BUILD)/kernel.bin
   
 clean: 
 	rm -rf *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
-	*/*.o */*.d */*.asm */*.sym $(BUILD)
+	*/*.o */*.d */*.asm */*.sym \
+  */**/*.o */**/*.d */**/*.asm */**/*.sym \
+  $(BUILD) *.dts *.dtb
 
 ifndef CPUS
 CPUS := 8
 endif
 
-QEMUOPTS = -machine virt -kernel $(BUILD)/kernel -m 32M -nographic
+QEMUOPTS = -m 32M -nographic
 # use multi-core 
 QEMUOPTS += -smp $(CPUS)
 # use opensbi bootloader (fw_dynamic.bin)
 QEMUOPTS += -bios $(OPENSBI)
+
+QEMURUN = -machine virt -kernel $(BUILD)/kernel
+QEMUDUMPDTS = -machine virt,dumpdtb=virt.dtb
 	
 run: build
-	$(QEMU) $(QEMUOPTS)
+	$(QEMU) $(QEMURUN) $(QEMUOPTS)
+
+dts: 
+	$(QEMU) $(QEMUDUMPDTS) $(QEMUOPTS)
+	dtc -o virt.dts -O dts virt.dtb

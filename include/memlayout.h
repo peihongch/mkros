@@ -77,7 +77,7 @@
 // for use by the kernel and user pages
 // from physical address 0x80000000 to PHYSTOP.
 #define KERNBASE 0x80200000L
-#define PHYSTOP 0x80600000L
+#define PHYSTOP (KERNBASE + 0x0400000L) // 1024 => 0x0400
 
 // map the trampoline page to the highest address,
 // in both user and kernel space.

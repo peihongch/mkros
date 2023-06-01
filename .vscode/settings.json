@@ -1,7 +1,8 @@
 {
     "clang-tidy.compilerArgs": [
         "-std=gnu23",
-        "-I${workspaceFolder}/include"
+        "-I${workspaceFolder}/include",
+        "-I${workspaceFolder}/lib"
     ],
     "files.associations": {
         "types.h": "c",
@@ -9,6 +10,11 @@
         "defs.h": "c",
         "memlayout.h": "c",
         "param.h": "c",
-        "riscv.h": "c"
+        "riscv.h": "c",
+        "libfdt.h": "c",
+        "fdt.h": "c",
+        "libfdt_env.h": "c",
+        "sbi_string.h": "c",
+        "sbi_types.h": "c"
     }
 }
