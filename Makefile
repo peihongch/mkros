@@ -34,7 +34,10 @@ OBJS = \
 
 LIBFDT = \
   lib/libfdt/fdt.o \
-  lib/libfdt/fdt_ro.o
+  lib/libfdt/fdt_ro.o \
+  lib/libfdt/fdt_rw.o \
+  lib/libfdt/fdt_wip.o \
+  lib/libfdt/fdt_addresses.o
 
 SBI = \
   lib/sbi/sbi_string.o

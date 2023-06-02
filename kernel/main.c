@@ -86,9 +86,21 @@ void sys_info() {
     printk("rodata section:\t[%p ~ %p]\n", srodata, erodata);
     printk("data section:\t[%p ~ %p]\n", sdata, edata);
     printk("bss section: \t[%p ~ %p]\n", sbss, ebss);
-    printk("PhyMem Avail:\t[%p ~ %p]\n", end, (void*)PHYSTOP);
     printk("\n");
+
+    int id;
+    cpu_info* cpu;
+    memory_info* mem;
+
     printk("CPU Num:\t%d\n", cpu_num());
+    for_each_cpu(id, cpu) {
+        printk("CPU[%d]:\t\t%s %s %s\n", id, cpu->status, cpu->riscv_isa,
+               cpu->mmu_type);
+    }
     printk("RAM Size:\t%dMB\n", ram_size() >> 20);
+    for_each_mem(id, mem) {
+        printk("RAM[%d]:\t\t[%p ~ %p]\tSize: %dMB\n", id, mem->base_address,
+               mem->base_address + mem->ram_size, mem->ram_size >> 20);
+    }
     printk("\n");
 }

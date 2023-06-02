@@ -3,6 +3,7 @@
 // and pipe buffers. Allocates whole 4096-byte pages.
 
 #include "defs.h"
+#include "device_tree.h"
 #include "memlayout.h"
 #include "param.h"
 #include "riscv.h"
