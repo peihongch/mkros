@@ -3,6 +3,7 @@ BUILD=build
 
 OBJS = \
   $K/entry.o \
+  $K/device_tree.o \
   $K/console.o \
   $K/printk.o \
   $K/timer.o \
@@ -111,7 +112,7 @@ ifndef CPUS
 CPUS := 8
 endif
 
-QEMUOPTS = -m 32M -nographic
+QEMUOPTS = -m 128M -nographic
 # use multi-core 
 QEMUOPTS += -smp $(CPUS)
 # use opensbi bootloader (fw_dynamic.bin)

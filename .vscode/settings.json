@@ -15,6 +15,7 @@
         "fdt.h": "c",
         "libfdt_env.h": "c",
         "sbi_string.h": "c",
-        "sbi_types.h": "c"
+        "sbi_types.h": "c",
+        "device_tree.h": "c"
     }
 }
