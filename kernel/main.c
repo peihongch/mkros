@@ -20,7 +20,6 @@ extern char sdata[];
 extern char edata[];
 extern char sbss[];
 extern char ebss[];
-extern char end[];
 
 extern void _entry(void);
 
@@ -44,7 +43,7 @@ int main(unsigned long hartid, unsigned long dtb_pa) {
         pr_info("hart %d init done", hartid);
         pr_info("");
 
-        for (int i = 1; i < NCPU; i++) {
+        for (int i = 1; i < cpu_num(); i++) {
             unsigned long mask = 1 << i;
             sbi_ecall_hart_start(i, _entry, 0);
             sbi_ecall_send_ipi(mask, 0);

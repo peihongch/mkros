@@ -3,8 +3,8 @@
 
 #include "types.h"
 
-#define MAX_CPU 32
-#define MAX_MEM 8
+#define MAX_CPU 32  // maximum number of CPUs
+#define MAX_MEM 8   // maximum number of memory regions
 #define MAX_INFO_STR_LEN 16
 
 typedef struct {
@@ -33,6 +33,7 @@ int parse_device_tree(uintptr_t dtb_addr);
 
 int 		    cpu_num(void);
 cpu_info*	    cpu_of(int id);
+uint64_t		ram_start(void);
 uint64_t        ram_size(void);
 int             mem_num(void);
 memory_info*    mem_of(int id);

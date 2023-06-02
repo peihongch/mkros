@@ -1,8 +1,9 @@
 #include "cpu.h"
+#include "device_tree.h"
 #include "param.h"
 #include "riscv.h"
 
-struct cpu cpus[NCPU];
+struct cpu cpus[MAX_CPU];
 
 // Must be called with interrupts disabled,
 // to prevent race with process being moved

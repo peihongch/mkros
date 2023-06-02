@@ -2,12 +2,13 @@
 #define __PROC_H_
 
 #include "cpu.h"
+#include "device_tree.h"
 #include "file.h"
 #include "param.h"
 #include "riscv.h"
 #include "spinlock.h"
 
-extern struct cpu cpus[NCPU];
+extern struct cpu cpus[MAX_CPU];
 
 // per-process data for the trap handling code in trampoline.S.
 // sits in a page by itself just under the trampoline page in the

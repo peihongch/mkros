@@ -28,6 +28,7 @@ int				cpu_num(void)	{ return dt.cpu_num; }
 cpu_info*		cpu_of(int id)	{ return &dt.cpus[id]; }
 int             mem_num(void)	{ return dt.mem_num; }
 memory_info*    mem_of(int id)	{ return &dt.memory[id]; }
+uint64_t		ram_start(void)	{ return dt.memory[0].base_address; }
 uint64_t		ram_size(void)	{ 
     uint64_t ram_size = 0;
 

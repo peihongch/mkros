@@ -12,8 +12,9 @@
 
 void freerange(void* pa_start, void* pa_end);
 
-extern char end[];  // first address after kernel.
-                    // defined by kernel.ld.
+// defined by kernel.ld.
+extern char kernel_start[];  // kernel start address
+extern char kernel_end[];    // first address after kernel.
 
 struct run {
     struct run* next;
@@ -23,14 +24,28 @@ struct {
     struct spinlock lock;
     struct run* freelist;
     uint64_t npage;
+    uint64_t ram_start;
+    uint64_t ram_avail_start;
+    uint64_t ram_size;
+    uint64_t ram_avail_size;
+    uint64_t ram_stop;
+    uint64_t kernel_start;
+    uint64_t kernel_end;
 } kmem;
 
 void kinit() {
     initlock(&kmem.lock, "kmem");
     kmem.freelist = 0;
     kmem.npage = 0;
-    freerange(end, (void*)PHYSTOP);
-    pr_info("kernel_end: %p, phystop: %p", end, (void*)PHYSTOP);
+    kmem.kernel_start = (uint64_t)kernel_start;
+    kmem.kernel_end = (uint64_t)kernel_end;
+    kmem.ram_start = ram_start();
+    kmem.ram_avail_start = (uint64_t)kernel_end;
+    kmem.ram_size = ram_size();
+    kmem.ram_stop = kmem.ram_start + kmem.ram_size;
+    kmem.ram_avail_size = kmem.ram_stop - kmem.ram_avail_start;
+    freerange((void*)kmem.ram_avail_start, (void*)kmem.ram_stop);
+    pr_info("kernel_end: %p, phystop: %p", kernel_end, (void*)kmem.ram_stop);
     pr_info("kinit");
 }
 
@@ -48,8 +63,8 @@ void freerange(void* pa_start, void* pa_end) {
 void kfree(void* pa) {
     struct run* r;
 
-    if (((uint64_t)pa % PGSIZE) != 0 || (char*)pa < end ||
-        (uint64_t)pa >= PHYSTOP)
+    if (((uint64_t)pa % PGSIZE) != 0 || (uint64_t)pa < kmem.kernel_end ||
+        (uint64_t)pa >= kmem.ram_stop)
         panic("kfree");
 
     // Fill with junk to catch dangling refs.
