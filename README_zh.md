@@ -1,37 +1,37 @@
 # mkros
 
-> Status: Early Development
+> 状态：早期开发
 
-English | [简体中文](./README_zh.md)
+[English](./README.md) | 简体中文
 
-## Introduction
+## 介绍
 
-A microkernel OS for RISC-V arch.
+基于RISC-V架构的微内核操作系统。
 
-| Name                               | Config                    |
-| ---------------------------------- | ------------------------- |
-| Instruction Set Architecture (ISA) | RISC-V 64 (rv64imafdc)    |
-| Processor Platform                 | QEMU Virt                 |
-| Bootloader                         | OpenSBI v1.2-116-g7919530 |
+| 名称       | 配置                      |
+| ---------- | ------------------------- |
+| 指令集架构 | RISC-V 64 (rv64imafdc)    |
+| 处理器平台 | QEMU Virt                 |
+| 引导程序   | OpenSBI v1.2-116-g7919530 |
 
-## Features
+## 特性
 
-- [x] OpenSBI Bootloader
-- [x] Multi-processors / Multi-cores
-- [x] Non-uniform Memory Access (NUMA)
-- [x] Dynamic RAM Management
-- [ ] Buddy System
-- [ ] Slab Allocator
-- [ ] Others
+- [x] OpenSBI引导程序
+- [x] 多处理器 / 多核心
+- [x] 非一致内存访问（NUMA）
+- [x] 动态RAM管理
+- [ ] 伙伴系统
+- [ ] Slab分配器
+- [ ] 其他
 
-## Quick Start
+## 快速上手
 
-Build and run the mkros on qemu platform by the following step:
+通过下面的步骤构建和在 QEMU 平台上运行 mkros：
 
 ```
 $ make && make run
 ```
-The running output is as follows:
+运行输出如下：
 ```
 OpenSBI v1.2-116-g7919530
    ____                    _____ ____ _____
