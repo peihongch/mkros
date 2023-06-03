@@ -15,19 +15,30 @@
 #define PROP_ADDRESS_CELLS	"#address-cells"
 #define PROP_SIZE_CELLS		"#size-cells"
 #define PROP_REG    		"reg"
+#define PROP_NUMA_NODE_ID   "numa-node-id"
 
 // cpu specific props
 #define PROP_PHANDLE	"phandle"
 #define PROP_STATUS		"status"
 #define PROP_RISCV_ISA	"riscv,isa"
 #define PROP_MMU_TYPE	"mmu-type"
+#define PROP_CPU        "cpu"
 
 device_tree dt;
 
 int				cpu_num(void)	{ return dt.cpu_num; }
 cpu_info*		cpu_of(int id)	{ return &dt.cpus[id]; }
+cpu_info*       cpu_of_phandle(int phandle) {
+	for (int i = 0; i < cpu_num(); i++) {
+		if (cpu_of(i)->phandle == phandle)
+			return cpu_of(i);
+	}
+	return NULL;
+}
 int             mem_num(void)	{ return dt.mem_num; }
 memory_info*    mem_of(int id)	{ return &dt.memory[id]; }
+int             node_num(void)  { return dt.node_num; }
+node_info*      node_of(int id) { return &dt.nodes[id]; }
 uint64_t		ram_start(void)	{ return dt.memory[0].base_address; }
 uint64_t		ram_size(void)	{ 
     uint64_t ram_size = 0;
@@ -42,8 +53,107 @@ uint64_t		ram_size(void)	{
 
 static uint32_t address_cells, size_cells;
 
+static int get_prop_of_node(const void* fdt,
+                            int node,
+                            const char* prop,
+                            uint32_t* prop_value) {
+    const void* value;
+    int len;
+
+    // 获取节点属性的值
+    value = fdt_getprop(fdt, node, prop, &len);
+    if (!value) {
+        pr_err("failed to get %s props of %s node", prop, node);
+        return -1;
+    }
+
+    // 解析节点属性的值
+    switch (len) {
+        case 1:
+            *prop_value = *(uint8_t*)value;
+            break;
+        case 2:
+            *prop_value = be16_to_cpu(*(uint16_t*)value);
+            break;
+        case 4:
+            *prop_value = be32_to_cpu(*(uint32_t*)value);
+            break;
+        default:
+            pr_err("invalid len value of %s: %d", prop, len);
+            break;
+    }
+
+    return 0;
+}
+
 // 解析 /soc 节点
 static int parse_soc_node(const void* fdt, int node) {
+    return 0;
+}
+
+// 解析 /cpus/cpu 节点
+static int parse_cpu_node(const void* fdt, int node) {
+    cpu_info* cpu = &dt.cpus[dt.cpu_num++];
+    const uint32_t* reg;
+    int len, err;
+
+    // 获取"reg"属性，它包含了CPU的ID
+    reg = fdt_getprop(fdt, node, PROP_REG, &len);
+    if (reg == NULL) {
+        pr_err("failed to get %s prop of node %s", PROP_REG, CPU_SUBNODE);
+        return -1;
+    }
+    cpu->cpu_id = fdt32_to_cpu(*reg);
+
+    cpu->phandle = fdt_get_phandle(fdt, node);
+
+    // 获取"numa-node-id"属性
+    err = get_prop_of_node(fdt, node, PROP_NUMA_NODE_ID, &cpu->numa_node_id);
+    if (err < 0) {
+        pr_err("failed to get %s prop of node %s", PROP_NUMA_NODE_ID,
+               CPU_SUBNODE);
+        return -1;
+    }
+
+    // 获取"status"属性
+    const char* status = fdt_getprop(fdt, node, PROP_STATUS, NULL);
+    memcpy(cpu->status, status, strlen(status));
+
+    // 获取"riscv,isa"属性
+    const char* riscv_isa = fdt_getprop(fdt, node, PROP_RISCV_ISA, NULL);
+    memcpy(cpu->riscv_isa, riscv_isa, strlen(riscv_isa));
+
+    // 获取"mmu-type"属性
+    const char* mmu_type = fdt_getprop(fdt, node, PROP_MMU_TYPE, NULL);
+    memcpy(cpu->mmu_type, mmu_type, strlen(mmu_type));
+
+    return 0;
+}
+
+// 解析 /cpus/cpu-map 节点
+static int parse_cpu_map_node(const void* fdt, int node) {
+    int cluster_offset;
+
+    // 遍历cpu-map的子节点，获取每个cluster的信息
+    fdt_for_each_subnode(cluster_offset, fdt, node) {
+        node_info* node = &dt.nodes[dt.node_num++];
+        int core_offset;
+
+        fdt_for_each_subnode(core_offset, fdt, cluster_offset) {
+            const uint32_t* cpu;
+            int len;
+
+            // 获取"cpu"属性，它包含了CPU的ID
+            cpu = fdt_getprop(fdt, core_offset, PROP_CPU, &len);
+            if (cpu == NULL) {
+                pr_err("failed to get %s prop of node %s", PROP_CPU,
+                       CPUMAP_SUBNODE);
+                return -1;
+            }
+            node->cores[node->core_num++] = fdt32_to_cpu(*cpu);
+        }
+    }
+
     return 0;
 }
 
@@ -54,7 +164,6 @@ static int parse_cpus_node(const void* fdt, int node) {
     // 遍历CPU节点的子节点，获取每个CPU的信息
     fdt_for_each_subnode(cpu_offset, fdt, node) {
         const char* node_name;
-        const uint32_t* reg;
         int len;
 
         node_name = fdt_get_name(fdt, cpu_offset, &len);
@@ -64,38 +173,12 @@ static int parse_cpus_node(const void* fdt, int node) {
             continue;
         }
 
-        if (strncmp(node_name, CPU_SUBNODE, strlen(CPU_SUBNODE)) == 0) {
-            cpu_info* cpu = &dt.cpus[dt.cpu_num++];
-
-            // 获取"reg"属性，它包含了CPU的ID
-            reg = fdt_getprop(fdt, cpu_offset, PROP_REG, &len);
-            if (reg == NULL) {
-                pr_err("failed to get %s prop of node %s", PROP_REG, node_name);
-                continue;
-            }
-            cpu->cpu_id = fdt32_to_cpu(*reg);
-
-            cpu->phandle = fdt_get_phandle(fdt, cpu_offset);
-
-            // 获取"status"属性
-            const char* status =
-                fdt_getprop(fdt, cpu_offset, PROP_STATUS, NULL);
-            memcpy(cpu->status, status, strlen(status));
-
-            // 获取"riscv,isa"属性
-            const char* riscv_isa =
-                fdt_getprop(fdt, cpu_offset, PROP_RISCV_ISA, NULL);
-            memcpy(cpu->riscv_isa, riscv_isa, strlen(riscv_isa));
-
-            // 获取"mmu-type"属性
-            const char* mmu_type =
-                fdt_getprop(fdt, cpu_offset, PROP_MMU_TYPE, NULL);
-            memcpy(cpu->mmu_type, mmu_type, strlen(mmu_type));
-        } else if (strcmp(node_name, CPUMAP_SUBNODE) == 0) {
+        if (strncmp(node_name, CPU_SUBNODE, strlen(CPU_SUBNODE)) == 0)
+            parse_cpu_node(fdt, cpu_offset);
+        else if (strcmp(node_name, CPUMAP_SUBNODE) == 0)
+            parse_cpu_map_node(fdt, cpu_offset);
+        else
             pr_warn("ignore subnode %s of %s", node_name, CPUS_NODE);
-        } else {
-            pr_warn("ignore subnode %s of %s", node_name, CPUS_NODE);
-        }
     }
 
     return 0;
@@ -105,12 +188,19 @@ static int parse_cpus_node(const void* fdt, int node) {
 static int parse_memory_node(const void* fdt, int node) {
     memory_info* mem = &dt.memory[dt.mem_num++];
     const uint32_t* reg;
-    int len;
+    int len, err;
 
     // 获取 memory 节点的 reg 属性，len 为 reg 指向区域的大小（B）
     reg = fdt_getprop(fdt, node, PROP_REG, &len);
     if (!reg) {
         pr_err("failed to get reg props of %s node: %d", MEMORY_NODE, node);
+        return -1;
+    }
+
+    // 获取"numa-node-id"属性
+    err = get_prop_of_node(fdt, node, PROP_NUMA_NODE_ID, &mem->numa_node_id);
+    if (err < 0) {
+        pr_err("failed to get %s prop of node %s", PROP_NUMA_NODE_ID, node);
         return -1;
     }
 

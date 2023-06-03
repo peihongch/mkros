@@ -118,6 +118,11 @@ endif
 QEMUOPTS = -m 128M -nographic
 # use multi-core 
 QEMUOPTS += -smp $(CPUS)
+# use numa
+QEMUOPTS += -numa node,nodeid=0,cpus=0-1,mem=32M \
+            -numa node,nodeid=1,cpus=2-3,mem=32M \
+            -numa node,nodeid=2,cpus=4-5,mem=32M \
+            -numa node,nodeid=3,cpus=6-7,mem=32M
 # use opensbi bootloader (fw_dynamic.bin)
 QEMUOPTS += -bios $(OPENSBI)
 
