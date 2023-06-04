@@ -91,12 +91,13 @@ void sys_info() {
     node_info* node;
     cpu_info* cpu;
     memory_info* mem;
+    distance* dist;
 
-    printk("Node Num:\t%d\n", node_num());
+    printk("NUMA Node Num:\t%d\n", node_num());
     for_each_node(id, node) {
         int cpu_id;
 
-        printk("Node[%d]:\t", id);
+        printk("NUMA Node[%d]:\t", id);
         for_each_cpu_of_node(cpu_id, node, cpu) {
             if (cpu_id)
                 printk(",");
@@ -104,17 +105,29 @@ void sys_info() {
         }
         printk("\n");
     }
+    printk("Dist Matrix:\t");
+    int last_src = 0;
+    for_each_distance_entry(id, dist) {
+        if (dist->src != last_src) {
+            last_src = dist->src;
+            printk("\n\t\t");
+        }
+        printk("%d\t", dist->value);
+    }
+    printk("\n");
 
     printk("CPU Num:\t%d\n", cpu_num());
     for_each_cpu(id, cpu) {
         printk("CPU[%d]:\t\tnuma-node(%d) %s %s %s\n", cpu->cpu_id,
                cpu->numa_node_id, cpu->status, cpu->riscv_isa, cpu->mmu_type);
     }
+
     printk("RAM Size:\t%dMB\n", ram_size() >> 20);
     for_each_mem(id, mem) {
         printk("RAM[%d]:\t\tnuma-node(%d) [%p ~ %p]\tSize: %dMB\n", id,
                mem->numa_node_id, mem->base_address,
                mem->base_address + mem->ram_size, mem->ram_size >> 20);
     }
+
     printk("\n");
 }

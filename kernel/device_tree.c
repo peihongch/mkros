@@ -4,12 +4,13 @@
 
 /* clang-format off */
 
-#define ROOT_NODE		"/"
-#define CPUS_NODE   	"cpus"
-#define CPU_SUBNODE		"cpu@"
-#define CPUMAP_SUBNODE	"cpu-map"
-#define MEMORY_NODE 	"memory@"
-#define SOC_NODE    	"soc"
+#define ROOT_NODE		    "/"
+#define CPUS_NODE   	    "cpus"
+#define CPU_SUBNODE		    "cpu@"
+#define CPU_MAP_SUBNODE	    "cpu-map"
+#define MEMORY_NODE 	    "memory@"
+#define SOC_NODE    	    "soc"
+#define DISTANCE_MAP_NODE   "distance-map"
 
 // common props
 #define PROP_ADDRESS_CELLS	"#address-cells"
@@ -24,10 +25,13 @@
 #define PROP_MMU_TYPE	"mmu-type"
 #define PROP_CPU        "cpu"
 
+// other props
+#define PROP_DISTANCE_MATRIX    "distance-matrix"
+
 device_tree dt;
 
-int				cpu_num(void)	{ return dt.cpu_num; }
-cpu_info*		cpu_of(int id)	{ return &dt.cpus[id]; }
+int				cpu_num(void)	            { return dt.cpu_num; }
+cpu_info*		cpu_of(int id)	            { return &dt.cpus[id]; }
 cpu_info*       cpu_of_phandle(int phandle) {
 	for (int i = 0; i < cpu_num(); i++) {
 		if (cpu_of(i)->phandle == phandle)
@@ -35,12 +39,14 @@ cpu_info*       cpu_of_phandle(int phandle) {
 	}
 	return NULL;
 }
-int             mem_num(void)	{ return dt.mem_num; }
-memory_info*    mem_of(int id)	{ return &dt.memory[id]; }
-int             node_num(void)  { return dt.node_num; }
-node_info*      node_of(int id) { return &dt.nodes[id]; }
-uint64_t		ram_start(void)	{ return dt.memory[0].base_address; }
-uint64_t		ram_size(void)	{ 
+int             mem_num(void)               { return dt.mem_num; }
+memory_info*    mem_of(int id)              { return &dt.memory[id]; }
+int             node_num(void)              { return dt.node_num; }
+node_info*      node_of(int id)             { return &dt.nodes[id]; }
+int             distance_entry_num()        { return dt.distance_entry_num; }
+distance*       distance_entry_of(int id)   { return &dt.distance_matrix[id]; }
+uint64_t		ram_start(void)	            { return dt.memory[0].base_address; }
+uint64_t		ram_size(void)	            { 
     uint64_t ram_size = 0;
 
     for (int i = 0; i < dt.mem_num; i++)
@@ -147,7 +153,7 @@ static int parse_cpu_map_node(const void* fdt, int node) {
             cpu = fdt_getprop(fdt, core_offset, PROP_CPU, &len);
             if (cpu == NULL) {
                 pr_err("failed to get %s prop of node %s", PROP_CPU,
-                       CPUMAP_SUBNODE);
+                       CPU_MAP_SUBNODE);
                 return -1;
             }
             node->cores[node->core_num++] = fdt32_to_cpu(*cpu);
@@ -175,7 +181,7 @@ static int parse_cpus_node(const void* fdt, int node) {
 
         if (strncmp(node_name, CPU_SUBNODE, strlen(CPU_SUBNODE)) == 0)
             parse_cpu_node(fdt, cpu_offset);
-        else if (strcmp(node_name, CPUMAP_SUBNODE) == 0)
+        else if (strcmp(node_name, CPU_MAP_SUBNODE) == 0)
             parse_cpu_map_node(fdt, cpu_offset);
         else
             pr_warn("ignore subnode %s of %s", node_name, CPUS_NODE);
@@ -221,6 +227,30 @@ static int parse_memory_node(const void* fdt, int node) {
         // 在这里处理 Memory 相关信息，例如将其添加到内核的数据结构中
         mem->base_address = base_address;
         mem->ram_size = ram_size;
+    }
+
+    return 0;
+}
+
+// 解析 /distance-map 节点
+int parse_distance_map_node(const void* fdt, int node) {
+    const uint32_t* distance_matrix;
+    distance* dist;
+    int len;
+
+    // 获取"distance-matrix"属性，它包含了NUMA节点之间的距离矩阵
+    distance_matrix = fdt_getprop(fdt, node, PROP_DISTANCE_MATRIX, &len);
+    if (distance_matrix == NULL) {
+        pr_err("failed to get %s prop of node %s", PROP_DISTANCE_MATRIX,
+               DISTANCE_MAP_NODE);
+        return -1;
+    }
+
+    for (int i = 0; i < len / sizeof(uint32_t); i += 3) {
+        dist = &dt.distance_matrix[dt.distance_entry_num++];
+        dist->src = fdt32_to_cpu(distance_matrix[i]);
+        dist->dst = fdt32_to_cpu(distance_matrix[i + 1]);
+        dist->value = fdt32_to_cpu(distance_matrix[i + 2]);
     }
 
     return 0;
@@ -278,6 +308,8 @@ int parse_device_tree(uintptr_t dtb_addr) {
             err = parse_memory_node(fdt, offset);
         } else if (strcmp(node_name, CPUS_NODE) == 0) {
             err = parse_cpus_node(fdt, offset);
+        } else if (strcmp(node_name, DISTANCE_MAP_NODE) == 0) {
+            err = parse_distance_map_node(fdt, offset);
         } else if (strcmp(node_name, SOC_NODE) == 0) {
             err = parse_soc_node(fdt, offset);
         } else {

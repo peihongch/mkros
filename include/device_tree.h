@@ -7,6 +7,7 @@
 #define MAX_MEM 8             // maximum number of memory regions
 #define MAX_CORES_PER_NODE 4  // maximum number of cores per numa node
 #define MAX_INFO_STR_LEN 16
+#define MAX_DISTANCE_MAP_ENTRY 64  // maxmum number of distance map entry (8*8)
 
 typedef struct {
     int core_num;
@@ -29,12 +30,20 @@ typedef struct {
 } memory_info;
 
 typedef struct {
+    uint32_t src;
+    uint32_t dst;
+    uint32_t value;
+} distance;
+
+typedef struct {
     int cpu_num;
     cpu_info cpus[MAX_CPU];
     int mem_num;
     memory_info memory[MAX_MEM];
     int node_num;
     node_info nodes[MAX_CORES_PER_NODE];
+    int distance_entry_num;
+    distance distance_matrix[MAX_DISTANCE_MAP_ENTRY];
 } device_tree;
 
 /* clang-format off */
@@ -48,6 +57,8 @@ uint64_t		ram_start(void);
 uint64_t        ram_size(void);
 int             mem_num(void);
 memory_info*    mem_of(int id);
+int             distance_entry_num();
+distance*       distance_entry_of(int id);
 int             node_num(void);
 node_info*      node_of(int id);
 
@@ -63,6 +74,9 @@ node_info*      node_of(int id);
 #define for_each_cpu_of_node(id, node, cpu) \
     for (id = 0;                            \
          cpu = cpu_of_phandle((node)->cores[id]), id < (node)->core_num; id++)
+
+#define for_each_distance_entry(id, de) \
+    for (id = 0; de = distance_entry_of(id), id < distance_entry_num(); id++)
 
 /* clang-format on */
 

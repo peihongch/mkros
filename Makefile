@@ -118,13 +118,25 @@ endif
 QEMUOPTS = -m 128M -nographic
 # use multi-core 
 QEMUOPTS += -smp $(CPUS)
-# use numa
-QEMUOPTS += -numa node,nodeid=0,cpus=0-1,mem=32M \
-            -numa node,nodeid=1,cpus=2-3,mem=32M \
-            -numa node,nodeid=2,cpus=4-5,mem=32M \
-            -numa node,nodeid=3,cpus=6-7,mem=32M
+# config numa, cpu and memory
+# TODO: add L1/L2/L3 cache?
+QEMUOPTS += -numa node,nodeid=0,cpus=0-1,memdev=mem0 \
+						-numa node,nodeid=1,cpus=2-3,memdev=mem1 \
+						-numa node,nodeid=2,cpus=4-5,memdev=mem2 \
+						-numa node,nodeid=3,cpus=6-7,memdev=mem3 \
+						-numa dist,src=0,dst=1,val=20 \
+						-numa dist,src=0,dst=2,val=30 \
+						-numa dist,src=0,dst=3,val=40 \
+						-numa dist,src=1,dst=2,val=20 \
+						-numa dist,src=1,dst=3,val=30 \
+						-numa dist,src=2,dst=3,val=20 \
+						-object memory-backend-ram,id=mem0,size=32M \
+						-object memory-backend-ram,id=mem1,size=32M \
+						-object memory-backend-ram,id=mem2,size=32M \
+						-object memory-backend-ram,id=mem3,size=32M
 # use opensbi bootloader (fw_dynamic.bin)
 QEMUOPTS += -bios $(OPENSBI)
+# QEMUOPTS += -device virtio-rng-pci -global virtio-mmio.force-legacy-acpi-tables=acpi
 
 QEMURUN = -machine virt -kernel $(BUILD)/kernel
 QEMUDUMPDTS = -machine virt,dumpdtb=virt.dtb
