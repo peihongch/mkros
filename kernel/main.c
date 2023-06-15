@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "device_tree.h"
 #include "memlayout.h"
+#include "mm.h"
 #include "param.h"
 #include "riscv.h"
 #include "sbi.h"
@@ -34,14 +35,10 @@ int main(unsigned long hartid, unsigned long dtb_pa) {
         printk("\n");
         parse_device_tree(dtb_pa);
         sys_info();
-        pr_info("");
-        pr_info("hart %d enter main()...", hartid);
-        kinit();         // physical page allocator
-        timerinit();     // init a lock for timer
-        trapinithart();  // install kernel trap vector, including interrupt
-                         // handler
+        bootmem_init();  // init bootmem
+        kinit();      // physical page allocator
+        timerinit();  // init a lock for timer
         pr_info("hart %d init done", hartid);
-        pr_info("");
 
         for (int i = 1; i < cpu_num(); i++) {
             unsigned long mask = 1 << i;
@@ -50,17 +47,17 @@ int main(unsigned long hartid, unsigned long dtb_pa) {
         }
         __sync_synchronize();
         started = 1;
-        pr_info("mkros kernel started");
     } else {
         sbi_ecall_hart_start(0, _entry, 0);
         sbi_ecall_send_ipi(0, 0);
         while (started == 0)
             ;
         __sync_synchronize();
-        pr_info("hart %d enter main()...", hartid);
-        trapinithart();
         pr_info("hart %d init done", hartid);
     }
+
+    trapinithart();  // install kernel trap vector, including interrupt
+                     // handler
 
     while (1) {
     }

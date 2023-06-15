@@ -17,6 +17,9 @@
         "sbi_string.h": "c",
         "sbi_types.h": "c",
         "device_tree.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "spinlock.h": "c",
+        "mm.h": "c",
+        "list.h": "c"
     }
 }

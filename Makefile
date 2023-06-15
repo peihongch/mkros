@@ -1,4 +1,5 @@
 K=kernel
+MM=mm
 BUILD=build
 
 OBJS = \
@@ -30,7 +31,8 @@ OBJS = \
   $K/sysfile.o \
   $K/kernelvec.o \
   $K/plic.o \
-  $K/virtio_disk.o
+  $K/virtio_disk.o \
+  $(MM)/bootmem.o
 
 LIBFDT = \
   lib/libfdt/fdt.o \
@@ -115,7 +117,7 @@ ifndef CPUS
 CPUS := 8
 endif
 
-QEMUOPTS = -m 128M -nographic
+QEMUOPTS = -m 1024M -nographic
 # use multi-core 
 QEMUOPTS += -smp $(CPUS)
 # config numa, cpu and memory
@@ -130,10 +132,10 @@ QEMUOPTS += -numa node,nodeid=0,cpus=0-1,memdev=mem0 \
 						-numa dist,src=1,dst=2,val=20 \
 						-numa dist,src=1,dst=3,val=30 \
 						-numa dist,src=2,dst=3,val=20 \
-						-object memory-backend-ram,id=mem0,size=32M \
-						-object memory-backend-ram,id=mem1,size=32M \
-						-object memory-backend-ram,id=mem2,size=32M \
-						-object memory-backend-ram,id=mem3,size=32M
+						-object memory-backend-ram,id=mem0,size=256M \
+						-object memory-backend-ram,id=mem1,size=256M \
+						-object memory-backend-ram,id=mem2,size=256M \
+						-object memory-backend-ram,id=mem3,size=256M
 # use opensbi bootloader (fw_dynamic.bin)
 QEMUOPTS += -bios $(OPENSBI)
 # QEMUOPTS += -device virtio-rng-pci -global virtio-mmio.force-legacy-acpi-tables=acpi

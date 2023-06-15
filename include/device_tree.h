@@ -3,9 +3,10 @@
 
 #include "types.h"
 
-#define MAX_CPU 32            // maximum number of CPUs
-#define MAX_MEM 8             // maximum number of memory regions
-#define MAX_CORES_PER_NODE 4  // maximum number of cores per numa node
+#define MAX_CPU 32             // maximum number of CPUs
+#define MAX_MEM 8              // maximum number of memory regions
+#define MAX_NUMA_NODE MAX_MEM  // maximum number of numa nodes
+#define MAX_CORES_PER_NODE 4   // maximum number of cores per numa node
 #define MAX_INFO_STR_LEN 16
 #define MAX_DISTANCE_MAP_ENTRY 64  // maxmum number of distance map entry (8*8)
 
@@ -61,6 +62,7 @@ int             distance_entry_num();
 distance*       distance_entry_of(int id);
 int             node_num(void);
 node_info*      node_of(int id);
+node_info*      node_of_cpu(int id);
 
 #define for_each_cpu(id, cpu) \
     for (id = 0; cpu = cpu_of(id), id < cpu_num(); id++)

@@ -43,6 +43,10 @@ int             mem_num(void)               { return dt.mem_num; }
 memory_info*    mem_of(int id)              { return &dt.memory[id]; }
 int             node_num(void)              { return dt.node_num; }
 node_info*      node_of(int id)             { return &dt.nodes[id]; }
+node_info*      node_of_cpu(int id)         {
+    cpu_info* cpu = cpu_of(id);
+    return node_of(cpu->numa_node_id);
+}
 int             distance_entry_num()        { return dt.distance_entry_num; }
 distance*       distance_entry_of(int id)   { return &dt.distance_matrix[id]; }
 uint64_t		ram_start(void)	            { return dt.memory[0].base_address; }
