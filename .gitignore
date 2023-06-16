@@ -54,3 +54,4 @@ build/
 *.dtb
 *.dts
 .gdbinit
+.gdb_history 
