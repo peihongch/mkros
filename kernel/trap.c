@@ -178,7 +178,7 @@ int devintr() {
                     // keyboard input
                     int c = sbi_ecall_console_getc();
                     if (-1 != c) {
-                        consoleintr(c);
+                        console_intr(c);
                     }
                 } else if (irq == VIRTIO0_IRQ) {
                     virtio_disk_intr();

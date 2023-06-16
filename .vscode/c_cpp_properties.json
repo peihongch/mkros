@@ -7,7 +7,7 @@
                 "${workspaceFolder}/lib"
             ],
             "defines": [],
-            "compilerPath": "/usr/local/bin/riscv64-unknown-elf-gcc",
+            "compilerPath": "/usr/bin/riscv64-linux-gnu-gcc",
             "cStandard": "gnu23",
             "cppStandard": "gnu++23",
             "intelliSenseMode": "gcc-x64",

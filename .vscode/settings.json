@@ -20,6 +20,9 @@
         "type_traits": "c",
         "spinlock.h": "c",
         "mm.h": "c",
-        "list.h": "c"
+        "list.h": "c",
+        "stdarg.h": "c",
+        "compare": "c",
+        "cstdio": "c"
     }
 }

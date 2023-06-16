@@ -25,9 +25,10 @@ void        bpin(struct buf*);
 void        bunpin(struct buf*);
 
 // console.c
-void consoleinit(void);
-void consoleintr(int);
-void consputc(int);
+void console_init(void);
+void console_intr(int);
+void console_putchar(int);
+void console_print(const char* b);
 
 // timer.c
 void timerinit();
@@ -89,9 +90,9 @@ int 	piperead(struct pipe*, uint64_t, int);
 int 	pipewrite(struct pipe*, uint64_t, int);
 
 // printk.c
-void 	printk(char*, ...);
-void 	panic(char*) __attribute__((noreturn));
-void 	printkinit(void);
+int     printk(const char* fmt, ...);
+void 	panic(const char*) __attribute__((noreturn));
+void 	printk_init(void);
 
 #define pr_info(fmt, ...) \
     printk("[ INFO][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)

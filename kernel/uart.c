@@ -167,7 +167,7 @@ void uartintr(void) {
         int c = uartgetc();
         if (c == -1)
             break;
-        consoleintr(c);
+        console_intr(c);
     }
 
     // send buffered characters.

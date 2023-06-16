@@ -6,7 +6,8 @@ OBJS = \
   $K/entry.o \
   $K/device_tree.o \
   $K/console.o \
-  $K/printk.o \
+  $K/printk/vsprintf.o \
+  $K/printk/printk.o \
   $K/timer.o \
   $K/uart.o \
   $K/kalloc.o \
@@ -111,7 +112,7 @@ clean:
 	rm -rf *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*/*.o */*.d */*.asm */*.sym \
   */**/*.o */**/*.d */**/*.asm */**/*.sym \
-  $(BUILD) *.dts *.dtb
+  $(BUILD) *.dts *.dtb .gdbinit
 
 ifndef CPUS
 CPUS := 8
@@ -138,13 +139,27 @@ QEMUOPTS += -numa node,nodeid=0,cpus=0-1,memdev=mem0 \
 						-object memory-backend-ram,id=mem3,size=256M
 # use opensbi bootloader (fw_dynamic.bin)
 QEMUOPTS += -bios $(OPENSBI)
-# QEMUOPTS += -device virtio-rng-pci -global virtio-mmio.force-legacy-acpi-tables=acpi
 
-QEMURUN = -machine virt -kernel $(BUILD)/kernel
+# try to generate a unique GDB port
+GDBPORT = $(shell expr `id -u` % 5000 + 25000)
+# QEMU's gdb stub command line changed in 0.11
+QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
+	then echo "-gdb tcp::$(GDBPORT)"; \
+	else echo "-s -p $(GDBPORT)"; fi)
+
+QEMURUN = -machine virt -kernel $(BUILD)/kernel.bin
+QEMUDBG = -machine virt -kernel $(BUILD)/kernel
 QEMUDUMPDTS = -machine virt,dumpdtb=virt.dtb
 	
 run: build
 	$(QEMU) $(QEMURUN) $(QEMUOPTS)
+
+.gdbinit: .gdbinit.tmpl-riscv
+	sed "s/:1234/:$(GDBPORT)/" < $^ > $@
+
+gdb: $(BUILD)/kernel .gdbinit
+	@echo "*** Now run 'gdb-multiarch' in another window." 1>&2
+	$(QEMU) $(QEMUDBG) $(QEMUOPTS) -S $(QEMUGDB)
 
 dts: 
 	$(QEMU) $(QEMUDUMPDTS) $(QEMUOPTS)

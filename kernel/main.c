@@ -30,14 +30,14 @@ void sys_info();
 int main(unsigned long hartid, unsigned long dtb_pa) {
     inithartid(hartid);
     if (hartid == 0) {
-        consoleinit();
-        printkinit();
+        console_init();
+        printk_init();
         printk("\n");
         parse_device_tree(dtb_pa);
         sys_info();
         bootmem_init();  // init bootmem
-        kinit();      // physical page allocator
-        timerinit();  // init a lock for timer
+        kinit();         // physical page allocator
+        timerinit();     // init a lock for timer
         pr_info("hart %d init done", hartid);
 
         for (int i = 1; i < cpu_num(); i++) {
