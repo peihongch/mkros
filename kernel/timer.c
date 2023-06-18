@@ -1,4 +1,4 @@
-#include "defs.h"
+#include "kernel.h"
 #include "param.h"
 #include "sbi.h"
 #include "spinlock.h"

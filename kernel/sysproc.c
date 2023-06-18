@@ -1,4 +1,4 @@
-#include "defs.h"
+#include "kernel.h"
 #include "memlayout.h"
 #include "param.h"
 #include "proc.h"

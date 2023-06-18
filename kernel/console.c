@@ -11,7 +11,7 @@
 
 #include <stdarg.h>
 
-#include "defs.h"
+#include "kernel.h"
 #include "file.h"
 #include "fs.h"
 #include "memlayout.h"

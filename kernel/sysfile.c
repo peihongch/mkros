@@ -4,7 +4,7 @@
 // user code, and calls into file.c and fs.c.
 //
 
-#include "defs.h"
+#include "kernel.h"
 #include "fcntl.h"
 #include "file.h"
 #include "fs.h"

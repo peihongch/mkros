@@ -1,5 +1,5 @@
 #include "device_tree.h"
-#include "defs.h"
+#include "kernel.h"
 #include "libfdt/libfdt.h"
 
 /* clang-format off */

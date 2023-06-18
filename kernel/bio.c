@@ -14,7 +14,7 @@
 //     so do not keep them longer than necessary.
 
 #include "buf.h"
-#include "defs.h"
+#include "kernel.h"
 #include "fs.h"
 #include "param.h"
 #include "riscv.h"

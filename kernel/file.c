@@ -3,7 +3,7 @@
 //
 
 #include "file.h"
-#include "defs.h"
+#include "kernel.h"
 #include "fs.h"
 #include "param.h"
 #include "proc.h"

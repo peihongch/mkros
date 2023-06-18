@@ -7,7 +7,7 @@
 //
 
 #include "buf.h"
-#include "defs.h"
+#include "kernel.h"
 #include "fs.h"
 #include "memlayout.h"
 #include "param.h"

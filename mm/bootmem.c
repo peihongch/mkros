@@ -1,8 +1,8 @@
 // Physical memory allocator, for early kernel boot stage.
 // Allocates one or more consecutive physical 4096-byte pages at a time.
 
-#include "defs.h"
 #include "device_tree.h"
+#include "kernel.h"
 #include "list.h"
 #include "mm.h"
 #include "spinlock.h"

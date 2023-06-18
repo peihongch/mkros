@@ -7,7 +7,7 @@
     "files.associations": {
         "types.h": "c",
         "fs.h": "c",
-        "defs.h": "c",
+        "kernel.h": "c",
         "memlayout.h": "c",
         "param.h": "c",
         "riscv.h": "c",
@@ -23,6 +23,7 @@
         "list.h": "c",
         "stdarg.h": "c",
         "compare": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "kernel.h": "c"
     }
 }

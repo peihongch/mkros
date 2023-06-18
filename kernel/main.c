@@ -1,5 +1,5 @@
-#include "defs.h"
 #include "device_tree.h"
+#include "kernel.h"
 #include "memlayout.h"
 #include "mm.h"
 #include "param.h"

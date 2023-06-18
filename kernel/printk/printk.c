@@ -11,9 +11,9 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-#include "defs.h"
 #include "file.h"
 #include "fs.h"
+#include "kernel.h"
 #include "memlayout.h"
 #include "param.h"
 #include "proc.h"
