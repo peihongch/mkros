@@ -1,9 +1,3 @@
-/*
- * copy and then modify from `linux/kernel/printk.c`
- *
- *  (C) 1991  Linus Torvalds
- */
-
 //
 // formatted console output -- printk, panic.
 //
@@ -22,6 +16,8 @@
 #include "spinlock.h"
 #include "types.h"
 
+#include "internal.h"
+
 volatile int panicked = 0;
 
 // lock to avoid interleaving concurrent printk's.
@@ -30,9 +26,7 @@ static struct {
     int locking;
 } pr;
 
-static char buf[1024];
-
-extern int vsprintf(char* buf, const char* fmt, va_list args);
+extern int vsprintf(ring_buf_t* buf, const char* fmt, va_list args);
 
 /*
  * When in kernel-mode, we cannot use printf, as fs is liable to
@@ -41,20 +35,21 @@ extern int vsprintf(char* buf, const char* fmt, va_list args);
  */
 int printk(const char* fmt, ...) {
     va_list args;
+    ring_buf_t ring_buf;
     int i, locking;
-
-    locking = pr.locking;
-    if (locking)
-        acquire(&pr.lock);
 
     if (fmt == 0)
         panic("null fmt");
 
+    ring_buf_init(&ring_buf, console_putchar);
     va_start(args, fmt);
-    i = vsprintf(buf, fmt, args);
+    i = vsprintf(&ring_buf, fmt, args);
     va_end(args);
-    console_print(buf);
 
+    locking = pr.locking;
+    if (locking)
+        acquire(&pr.lock);
+    ring_buf_flush(&ring_buf);
     if (locking)
         release(&pr.lock);
 

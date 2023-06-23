@@ -6,6 +6,7 @@ OBJS = \
   $K/entry.o \
   $K/device_tree.o \
   $K/console.o \
+	$K/printk/ring_buffer.o \
   $K/printk/vsprintf.o \
   $K/printk/printk.o \
   $K/timer.o \
@@ -151,15 +152,20 @@ QEMURUN = -machine virt -kernel $(BUILD)/kernel.bin
 QEMUDBG = -machine virt -kernel $(BUILD)/kernel
 QEMUDUMPDTS = -machine virt,dumpdtb=virt.dtb
 	
+GDB = gdb-multiarch
+
 run: build
 	$(QEMU) $(QEMURUN) $(QEMUOPTS)
 
 .gdbinit: .gdbinit.tmpl-riscv
 	sed "s/:1234/:$(GDBPORT)/" < $^ > $@
 
-gdb: $(BUILD)/kernel .gdbinit
-	@echo "*** Now run 'gdb-multiarch' in another window." 1>&2
+qemu-gdb: $(BUILD)/kernel .gdbinit
+	@echo "*** Now run '$(GDB)' in another window." 1>&2
 	$(QEMU) $(QEMUDBG) $(QEMUOPTS) -S $(QEMUGDB)
+
+gdb: 
+	$(GDB) $(BUILD)/kernel
 
 dts: 
 	$(QEMU) $(QEMUDUMPDTS) $(QEMUOPTS)
