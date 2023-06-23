@@ -5,12 +5,22 @@
 
 // Long-term locks for processes
 struct sleeplock {
-  uint locked;       // Is the lock held?
-  struct spinlock lk; // spinlock protecting this sleep lock
-  
-  // For debugging:
-  char *name;        // Name of lock.
-  int pid;           // Process holding lock
+    uint locked;         // Is the lock held?
+    struct spinlock lk;  // spinlock protecting this sleep lock
+
+    // For debugging:
+    char* name;  // Name of lock.
+    int pid;     // Process holding lock
 };
 
-#endif // __SLEEPLOCK_H_
+/* clang-format off */
+
+// sleeplock.c
+void 	acquire_sleep(struct sleeplock*);
+void 	release_sleep(struct sleeplock*);
+int 	holding_sleep(struct sleeplock*);
+void 	init_sleeplock(struct sleeplock*, char*);
+
+/* clang-format on */
+
+#endif  // __SLEEPLOCK_H_

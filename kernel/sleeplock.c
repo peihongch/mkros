@@ -9,14 +9,14 @@
 #include "spinlock.h"
 #include "types.h"
 
-void initsleeplock(struct sleeplock* lk, char* name) {
+void init_sleeplock(struct sleeplock* lk, char* name) {
     initlock(&lk->lk, "sleep lock");
     lk->name = name;
     lk->locked = 0;
     lk->pid = 0;
 }
 
-void acquiresleep(struct sleeplock* lk) {
+void acquire_sleep(struct sleeplock* lk) {
     acquire(&lk->lk);
     while (lk->locked) {
         sleep(lk, &lk->lk);
@@ -26,7 +26,7 @@ void acquiresleep(struct sleeplock* lk) {
     release(&lk->lk);
 }
 
-void releasesleep(struct sleeplock* lk) {
+void release_sleep(struct sleeplock* lk) {
     acquire(&lk->lk);
     lk->locked = 0;
     lk->pid = 0;
@@ -34,7 +34,7 @@ void releasesleep(struct sleeplock* lk) {
     release(&lk->lk);
 }
 
-int holdingsleep(struct sleeplock* lk) {
+int holding_sleep(struct sleeplock* lk) {
     int r;
 
     acquire(&lk->lk);

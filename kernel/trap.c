@@ -96,7 +96,7 @@ void usertrapret(void) {
     p->trapframe->kernel_satp = r_satp();          // kernel page table
     p->trapframe->kernel_sp = p->kstack + PGSIZE;  // process's kernel stack
     p->trapframe->kernel_trap = (uint64_t)usertrap;
-    p->trapframe->kernel_hartid = r_tp();  // hartid for cpuid()
+    p->trapframe->kernel_hartid = r_tp();  // hartid for cpu_id()
 
     // set up the registers that trampoline.S's sret will use
     // to get to user space.

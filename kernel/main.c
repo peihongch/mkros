@@ -35,6 +35,7 @@ int main(unsigned long hartid, unsigned long dtb_pa) {
         printk("\n");
         parse_device_tree(dtb_pa);
         sys_info();
+
         bootmem_init();  // init bootmem
         kinit();         // physical page allocator
         timerinit();     // init a lock for timer
@@ -56,8 +57,8 @@ int main(unsigned long hartid, unsigned long dtb_pa) {
         pr_info("hart %d init done", hartid);
     }
 
-    trapinithart();  // install kernel trap vector, including interrupt
-                     // handler
+    // install kernel trap vector, including interrupt handler
+    trapinithart();
 
     while (1) {
     }

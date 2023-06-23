@@ -174,7 +174,7 @@ void iinit() {
 
     initlock(&itable.lock, "itable");
     for (i = 0; i < NINODE; i++) {
-        initsleeplock(&itable.inode[i].lock, "inode");
+        init_sleeplock(&itable.inode[i].lock, "inode");
     }
 }
 
@@ -277,7 +277,7 @@ void ilock(struct inode* ip) {
     if (ip == 0 || ip->ref < 1)
         panic("ilock");
 
-    acquiresleep(&ip->lock);
+    acquire_sleep(&ip->lock);
 
     if (ip->valid == 0) {
         bp = bread(ip->dev, IBLOCK(ip->inum, sb));
@@ -297,10 +297,10 @@ void ilock(struct inode* ip) {
 
 // Unlock the given inode.
 void iunlock(struct inode* ip) {
-    if (ip == 0 || !holdingsleep(&ip->lock) || ip->ref < 1)
+    if (ip == 0 || !holding_sleep(&ip->lock) || ip->ref < 1)
         panic("iunlock");
 
-    releasesleep(&ip->lock);
+    release_sleep(&ip->lock);
 }
 
 // Drop a reference to an in-memory inode.
@@ -317,8 +317,8 @@ void iput(struct inode* ip) {
         // inode has no links and no other references: truncate and free.
 
         // ip->ref == 1 means no other process can have ip locked,
-        // so this acquiresleep() won't block (or deadlock).
-        acquiresleep(&ip->lock);
+        // so this acquire_sleep() won't block (or deadlock).
+        acquire_sleep(&ip->lock);
 
         release(&itable.lock);
 
@@ -327,7 +327,7 @@ void iput(struct inode* ip) {
         iupdate(ip);
         ip->valid = 0;
 
-        releasesleep(&ip->lock);
+        release_sleep(&ip->lock);
 
         acquire(&itable.lock);
     }

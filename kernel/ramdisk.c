@@ -22,7 +22,7 @@ ramdiskinit(void)
 void
 ramdiskrw(struct buf *b)
 {
-  if(!holdingsleep(&b->lock))
+  if(!holding_sleep(&b->lock))
     panic("ramdiskrw: buf not locked");
   if((b->flags & (B_VALID|B_DIRTY)) == B_VALID)
     panic("ramdiskrw: nothing to do");

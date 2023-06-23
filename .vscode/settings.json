@@ -24,6 +24,8 @@
         "stdarg.h": "c",
         "compare": "c",
         "cstdio": "c",
-        "file.h": "c"
+        "file.h": "c",
+        "cpu.h": "c",
+        "math.h": "c"
     }
 }

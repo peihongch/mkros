@@ -8,7 +8,7 @@ struct cpu cpus[MAX_CPU];
 // Must be called with interrupts disabled,
 // to prevent race with process being moved
 // to a different CPU.
-int cpuid() {
+int cpu_id() {
     int id = r_tp();
     return id;
 }
@@ -16,7 +16,7 @@ int cpuid() {
 // Return this CPU's cpu struct.
 // Interrupts must be disabled.
 struct cpu* this_cpu(void) {
-    int id = cpuid();
+    int id = cpu_id();
     struct cpu* c = &cpus[id];
     return c;
 }

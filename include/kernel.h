@@ -102,7 +102,7 @@ void 	printk_init(void);
     printk("[ERROR][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
 // proc.c
-int 			cpuid(void);
+int 			cpu_id(void);
 void 			exit(int);
 int 			fork(void);
 int 			growproc(int);
@@ -128,12 +128,6 @@ void 			procdump(void);
 
 // swtch.S
 void swtch(struct context*, struct context*);
-
-// sleeplock.c
-void 	acquiresleep(struct sleeplock*);
-void 	releasesleep(struct sleeplock*);
-int 	holdingsleep(struct sleeplock*);
-void 	initsleeplock(struct sleeplock*, char*);
 
 // string.c
 int 	memcmp(const void*, const void*, uint);
