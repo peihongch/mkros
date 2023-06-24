@@ -12,10 +12,6 @@
 
 void freerange(void* pa_start, void* pa_end);
 
-// defined by kernel.ld.
-extern char kernel_start[];  // kernel start address
-extern char kernel_end[];    // first address after kernel.
-
 struct run {
     struct run* next;
 };

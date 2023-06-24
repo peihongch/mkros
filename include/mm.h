@@ -1,20 +1,30 @@
 #ifndef __MM_H_
 #define __MM_H_
 
+#include "riscv.h"
 #include "types.h"
 
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1 << PAGE_SHIFT)
-
-#define pa_to_pfn(pa) ((pa) >> PAGE_SHIFT)
-#define pfn_to_pa(pfn) ((pfn) << PAGE_SHIFT)
+#define pa_to_pfn(pa) ((pa) >> PGSHIFT)
+#define pfn_to_pa(pfn) ((pfn) << PGSHIFT)
 
 /* clang-format off */
 
-int			bootmem_init(void);
-uint64_t	bootmem_alloc(uint64_t size);
-uint64_t	bootmem_alloc_zeros(uint64_t size);
-void		bootmem_free(uint64_t addr, uint64_t size);
+// physical pages allocator APIs
+extern void* (* alloc_pages)(uint32_t npages);
+extern void* (* alloc_zero_pages)(uint32_t npages);
+extern void  (* free_pages)(void* addr, uint32_t npages);
+
+#define alloc_pages_exact(size) alloc_pages(((size) + PGSIZE - 1) >> PGSHIFT)
+#define zalloc_pages_exact(size) \
+    alloc_zero_pages(((size) + PGSIZE - 1) >> PGSHIFT)
+#define free_pages_exact(addr, size) \
+    free_pages((addr), ((size) + PGSIZE - 1) >> PGSHIFT)
+
+// bootmem APIs
+int		bootmem_init(void);
+void*	bootmem_alloc(uint32_t npages);
+void*	bootmem_alloc_zeros(uint32_t npages);
+void	bootmem_free(void* addr, uint32_t npages);
 
 /* clang-format on */
 

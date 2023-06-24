@@ -7,20 +7,11 @@
 #include "sbi.h"
 #include "types.h"
 
-static inline void inithartid(unsigned long hartid) {
+static inline void init_hartid(unsigned long hartid) {
     w_tp(hartid);
 }
 
 volatile static int started = 0;
-
-extern char stext[];
-extern char etext[];
-extern char srodata[];
-extern char erodata[];
-extern char sdata[];
-extern char edata[];
-extern char sbss[];
-extern char ebss[];
 
 extern void _entry(void);
 
@@ -28,7 +19,7 @@ void sys_info();
 
 // start() jumps here in supervisor mode on all CPUs.
 int main(unsigned long hartid, unsigned long dtb_pa) {
-    inithartid(hartid);
+    init_hartid(hartid);
     if (hartid == 0) {
         console_init();
         printk_init();
@@ -37,8 +28,10 @@ int main(unsigned long hartid, unsigned long dtb_pa) {
         sys_info();
 
         bootmem_init();  // init bootmem
-        kinit();         // physical page allocator
-        timerinit();     // init a lock for timer
+        // kinit();         // physical page allocator
+        kern_vm_init();  // create kernel page table
+        // kvm_init_hart();  // turn on paging
+        timerinit();  // init a lock for timer
         pr_info("hart %d init done", hartid);
 
         for (int i = 1; i < cpu_num(); i++) {

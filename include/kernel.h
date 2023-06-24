@@ -14,6 +14,19 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+// defined by *.ld linker file
+extern char stext[];
+extern char etext[];  // *.ld sets this to end of kernel code.
+extern char srodata[];
+extern char erodata[];
+extern char sdata[];
+extern char edata[];
+extern char sbss[];
+extern char ebss[];
+extern char kernel_start[];  // kernel start address
+extern char kernel_end[];    // first address after kernel.
+extern char trampoline[];    // trampoline.S
+
 /* clang-format off */
 
 // bio.c
@@ -161,8 +174,8 @@ void 	uartputc_sync(int);
 int 	uartgetc(void);
 
 // vm.c
-void 		kvminit(void);
-void 		kvminithart(void);
+void 		kern_vm_init(void);
+void 		kvm_init_hart(void);
 void 		kvmmap(pagetable_t, uint64_t, uint64_t, uint64_t, int);
 int 		mappages(pagetable_t, uint64_t, uint64_t, uint64_t, int);
 pagetable_t uvmcreate(void);

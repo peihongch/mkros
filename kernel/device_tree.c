@@ -1,6 +1,7 @@
 #include "device_tree.h"
 #include "kernel.h"
 #include "libfdt/libfdt.h"
+#include "math.h"
 
 /* clang-format off */
 
@@ -57,6 +58,15 @@ uint64_t		ram_size(void)	            {
         ram_size += dt.memory[i].ram_size;
 
     return ram_size; 
+}
+uint64_t        ram_end(void)               {
+    uint64_t ram_end = 0;
+
+    for (int i = 0; i < dt.mem_num; i++)
+        ram_end =
+            max(ram_end, dt.memory[i].base_address + dt.memory[i].ram_size);
+
+    return ram_end;
 }
 
 /* clang-format on */

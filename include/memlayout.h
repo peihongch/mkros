@@ -3,6 +3,8 @@
 #ifndef __MEM_LAYOUT_H_
 #define __MEM_LAYOUT_H_
 
+#include "riscv.h"
+
 // qemu -machine virt is set up like this,
 // based on qemu's hw/riscv/virt.c:
 //
@@ -73,15 +75,9 @@
 #define PLIC_MCLAIM(hart) (PLIC + 0x200004 + (hart)*0x2000)
 #define PLIC_SCLAIM(hart) (PLIC + 0x201004 + (hart)*0x2000)
 
-// the kernel expects there to be RAM
-// for use by the kernel and user pages
-// from physical address 0x80000000 to PHYSTOP.
-#define KERNBASE 0x80200000L
-#define PHYSTOP (KERNBASE + 0x0400000L) // 1024 => 0x0400
-
 // map the trampoline page to the highest address,
 // in both user and kernel space.
-#define TRAMPOLINE (MAXVA - PGSIZE)
+#define TRAMPOLINE (MAX_VA - PGSIZE)
 
 // map kernel stacks beneath the trampoline,
 // each surrounded by invalid guard pages.

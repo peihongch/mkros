@@ -82,6 +82,8 @@ CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += -I$(CURDIR)/include
 CFLAGS += -I$(CURDIR)/lib
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+# Set mmu mode to Sv48 (all available modes: Sv32/Sv39/Sv48/Sv57)
+CFLAGS += -D__RISCV_SV48__
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
@@ -94,6 +96,7 @@ endif
 LDFLAGS = -z max-page-size=4096
 
 ASFLAGS += -I$(CURDIR)/include
+ASFLAGS += -D__RISCV_SV48__
 
 all: build
 

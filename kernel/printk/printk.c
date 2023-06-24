@@ -42,14 +42,17 @@ int printk(const char* fmt, ...) {
         panic("null fmt");
 
     ring_buf_init(&ring_buf, console_putchar);
-    va_start(args, fmt);
-    i = vsprintf(&ring_buf, fmt, args);
-    va_end(args);
 
     locking = pr.locking;
     if (locking)
         acquire(&pr.lock);
+
+    va_start(args, fmt);
+    i = vsprintf(&ring_buf, fmt, args);
+    va_end(args);
+
     ring_buf_flush(&ring_buf);
+
     if (locking)
         release(&pr.lock);
 

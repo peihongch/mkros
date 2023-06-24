@@ -502,9 +502,19 @@ typedef uint64_t* pagetable_t;  // 512 PTEs
 #define PX(level, va) ((((uint64_t)(va)) >> PXSHIFT(level)) & PXMASK)
 
 // one beyond the highest possible virtual address.
-// MAXVA is actually one bit less than the max allowed by
-// Sv39, to avoid having to sign-extend virtual addresses
-// that have the high bit set.
-#define MAXVA (1L << (9 + 9 + 9 + 12 - 1))
+// MAXVA is actually one bit less than the max allowed by Sv32/Sv39/Sv48/Sv57, 
+// to avoid having to sign-extend virtual addresses that have the high bit set.
+#ifdef __RISCV_SV32__
+#define MAX_VA (1L << (10 + 10 + 12 - 1))
+#endif
+#ifdef __RISCV_SV39__
+#define MAX_VA (1L << (9 + 9 + 9 + 12 - 1))
+#endif
+#ifdef __RISCV_SV48__
+#define MAX_VA (1L << (9 + 9 + 9 + 9 + 12 - 1))
+#endif
+#ifdef __RISCV_SV57__
+#define MAX_VA (1L << (9 + 9 + 9 + 9 + 9 + 12 - 1))
+#endif
 
 #endif  // __RISCV_H_

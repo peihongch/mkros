@@ -1,26 +1,25 @@
-#include "kernel.h"
+#include "device_tree.h"
 #include "elf.h"
 #include "fs.h"
+#include "kernel.h"
 #include "memlayout.h"
+#include "mm.h"
 #include "param.h"
 #include "riscv.h"
-#include "types.h"
 
 /*
  * the kernel's page table.
  */
 pagetable_t kernel_pagetable;
 
-extern char etext[];  // kernel.ld sets this to end of kernel code.
-
-extern char trampoline[];  // trampoline.S
+// one beyond the highest usable physical address.
+static uint64_t max_pa = 0;
 
 // Make a direct-map page table for the kernel.
-pagetable_t kvmmake(void) {
+pagetable_t kern_pgtable_init(void) {
     pagetable_t kpgtbl;
 
-    kpgtbl = (pagetable_t)kalloc();
-    memset(kpgtbl, 0, PGSIZE);
+    kpgtbl = (pagetable_t)alloc_pages(1);
 
     // uart registers
     kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
@@ -32,31 +31,32 @@ pagetable_t kvmmake(void) {
     kvmmap(kpgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
 
     // map kernel text executable and read-only.
-    kvmmap(kpgtbl, KERNBASE, KERNBASE, (uint64_t)etext - KERNBASE,
-           PTE_R | PTE_X);
+    kvmmap(kpgtbl, (uint64_t)kernel_start, (uint64_t)kernel_start,
+           (uint64_t)etext - (uint64_t)kernel_start, PTE_R | PTE_X);
 
     // map kernel data and the physical RAM we'll make use of.
-    kvmmap(kpgtbl, (uint64_t)etext, (uint64_t)etext, PHYSTOP - (uint64_t)etext,
+    kvmmap(kpgtbl, (uint64_t)etext, (uint64_t)etext, max_pa - (uint64_t)etext,
            PTE_R | PTE_W);
 
     // map the trampoline for trap entry/exit to
     // the highest virtual address in the kernel.
     kvmmap(kpgtbl, TRAMPOLINE, (uint64_t)trampoline, PGSIZE, PTE_R | PTE_X);
 
-    // allocate and map a kernel stack for each process.
-    proc_mapstacks(kpgtbl);
+    // TODO : allocate and map a kernel stack for each process.
+    // proc_mapstacks(kpgtbl);
 
     return kpgtbl;
 }
 
 // Initialize the one kernel_pagetable
-void kvminit(void) {
-    kernel_pagetable = kvmmake();
+void kern_vm_init(void) {
+    max_pa = ram_end();
+    kernel_pagetable = kern_pgtable_init();
 }
 
 // Switch h/w page table register to the kernel's page table,
 // and enable paging.
-void kvminithart() {
+void kern_vm_init_hart() {
     // wait for any previous writes to the page table memory to finish.
     sfence_vma();
 
@@ -67,27 +67,44 @@ void kvminithart() {
 }
 
 // Return the address of the PTE in page table pagetable
-// that corresponds to virtual address va.  If alloc!=0,
+// that corresponds to virtual address va.  If alloc != 0,
 // create any required page-table pages.
 //
-// The risc-v Sv39 scheme has three levels of page-table
-// pages. A page-table page contains 512 64-bit PTEs.
-// A 64-bit virtual address is split into five fields:
-//   39..63 -- must be zero.
-//   30..38 -- 9 bits of level-2 index.
-//   21..29 -- 9 bits of level-1 index.
-//   12..20 -- 9 bits of level-0 index.
-//    0..11 -- 12 bits of byte offset within the page.
+// !!! Only support Sv39/Sv48/Sv57 now !!!
+//
+// The risc-v Sv39/Sv48/Sv57 scheme has three/four/five levels
+// of page-table pages. A page-table page contains 512 64-bit PTEs.
+// A 64-bit virtual address is split into three/four/five fields:
+//   39/48/57..63 -- must be zero.
+//         48..56 -- 9 bits of level-4 index. (for Sv57)
+//         39..47 -- 9 bits of level-3 index. (for Sv48)
+//         30..38 -- 9 bits of level-2 index. (for Sv39)
+//         21..29 -- 9 bits of level-1 index.
+//         12..20 -- 9 bits of level-0 index.
+//          0..11 -- 12 bits of byte offset within the page.
 pte_t* walk(pagetable_t pagetable, uint64_t va, int alloc) {
-    if (va >= MAXVA)
+    if (va >= MAX_VA)
         panic("walk");
 
-    for (int level = 2; level > 0; level--) {
+#ifdef __RISCV_SV32__
+    int level = 1;
+#endif
+#ifdef __RISCV_SV39__
+    int level = 2;
+#endif
+#ifdef __RISCV_SV48__
+    int level = 3;
+#endif
+#ifdef __RISCV_SV57__
+    int level = 4;
+#endif
+
+    for (; level > 0; level--) {
         pte_t* pte = &pagetable[PX(level, va)];
         if (*pte & PTE_V) {
             pagetable = (pagetable_t)PTE2PA(*pte);
         } else {
-            if (!alloc || (pagetable = (pde_t*)kalloc()) == 0)
+            if (!alloc || (pagetable = (pde_t*)alloc_pages(1)) == 0)
                 return 0;
             memset(pagetable, 0, PGSIZE);
             *pte = PA2PTE(pagetable) | PTE_V;
@@ -103,7 +120,7 @@ uint64_t walkaddr(pagetable_t pagetable, uint64_t va) {
     pte_t* pte;
     uint64_t pa;
 
-    if (va >= MAXVA)
+    if (va >= MAX_VA)
         return 0;
 
     pte = walk(pagetable, va, 0);
@@ -138,23 +155,23 @@ int mappages(pagetable_t pagetable,
              uint64_t size,
              uint64_t pa,
              int perm) {
-    uint64_t a, last;
+    uint64_t cur, last;
     pte_t* pte;
 
     if (size == 0)
         panic("mappages: size");
 
-    a = PGROUNDDOWN(va);
+    cur = PGROUNDDOWN(va);
     last = PGROUNDDOWN(va + size - 1);
     for (;;) {
-        if ((pte = walk(pagetable, a, 1)) == 0)
+        if ((pte = walk(pagetable, cur, 1)) == 0)
             return -1;
         if (*pte & PTE_V)
             panic("mappages: remap");
         *pte = PA2PTE(pa) | perm | PTE_V;
-        if (a == last)
+        if (cur == last)
             break;
-        a += PGSIZE;
+        cur += PGSIZE;
         pa += PGSIZE;
     }
     return 0;

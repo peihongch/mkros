@@ -6,7 +6,9 @@
                 "${workspaceFolder}/include",
                 "${workspaceFolder}/lib"
             ],
-            "defines": [],
+            "defines": [
+                "__RISCV_SV48__"
+            ],
             "compilerPath": "/usr/bin/riscv64-linux-gnu-gcc",
             "cStandard": "gnu23",
             "cppStandard": "gnu++23",

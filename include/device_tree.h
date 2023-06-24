@@ -56,6 +56,7 @@ cpu_info*	    cpu_of(int id);
 cpu_info*       cpu_of_phandle(int phandle);
 uint64_t		ram_start(void);
 uint64_t        ram_size(void);
+uint64_t        ram_end(void);
 int             mem_num(void);
 memory_info*    mem_of(int id);
 int             distance_entry_num();

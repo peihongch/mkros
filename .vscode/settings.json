@@ -26,6 +26,10 @@
         "cstdio": "c",
         "file.h": "c",
         "cpu.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
     }
 }
