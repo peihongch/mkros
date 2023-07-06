@@ -22,54 +22,54 @@ volatile int panicked = 0;
 
 // lock to avoid interleaving concurrent printk's.
 static struct {
-    struct spinlock lock;
-    int locking;
+	struct spinlock lock;
+	int				locking;
 } pr;
 
-extern int vsprintf(ring_buf_t* buf, const char* fmt, va_list args);
+extern int vsprintf(ring_buf_t *buf, const char *fmt, va_list args);
 
 /*
  * When in kernel-mode, we cannot use printf, as fs is liable to
  * point to 'interesting' things. Make a printf with fs-saving, and
  * all is well.
  */
-int printk(const char* fmt, ...) {
-    va_list args;
-    ring_buf_t ring_buf;
-    int i, locking;
+int printk(const char *fmt, ...) {
+	va_list	   args;
+	ring_buf_t ring_buf;
+	int		   i, locking;
 
-    if (fmt == 0)
-        panic("null fmt");
+	if (fmt == 0)
+		panic("null fmt");
 
-    ring_buf_init(&ring_buf, console_putchar);
+	ring_buf_init(&ring_buf, console_putchar);
 
-    locking = pr.locking;
-    if (locking)
-        acquire(&pr.lock);
+	locking = pr.locking;
+	if (locking)
+		acquire(&pr.lock);
 
-    va_start(args, fmt);
-    i = vsprintf(&ring_buf, fmt, args);
-    va_end(args);
+	va_start(args, fmt);
+	i = vsprintf(&ring_buf, fmt, args);
+	va_end(args);
 
-    ring_buf_flush(&ring_buf);
+	ring_buf_flush(&ring_buf);
 
-    if (locking)
-        release(&pr.lock);
+	if (locking)
+		release(&pr.lock);
 
-    return i;
+	return i;
 }
 
-void panic(const char* s) {
-    pr.locking = 0;
-    printk("panic: ");
-    printk(s);
-    printk("\n");
-    panicked = 1;  // freeze uart output from other CPUs
-    for (;;)
-        ;
+void panic(const char *s) {
+	pr.locking = 0;
+	printk("panic: ");
+	printk(s);
+	printk("\n");
+	panicked = 1; // freeze uart output from other CPUs
+	for (;;)
+		;
 }
 
 void printk_init(void) {
-    initlock(&pr.lock, "pr");
-    pr.locking = 1;
+	initlock(&pr.lock, "pr");
+	pr.locking = 1;
 }

@@ -5,7 +5,7 @@
 #include "spinlock.h"
 
 extern struct spinlock tickslock;
-extern uint ticks;
+extern uint			   ticks;
 
 void timerinit();
 void set_next_timeout();

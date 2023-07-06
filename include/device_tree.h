@@ -3,48 +3,48 @@
 
 #include "types.h"
 
-#define MAX_CPU 32             // maximum number of CPUs
-#define MAX_MEM 8              // maximum number of memory regions
-#define MAX_NUMA_NODE MAX_MEM  // maximum number of numa nodes
-#define MAX_CORES_PER_NODE 4   // maximum number of cores per numa node
+#define MAX_CPU 32			  // maximum number of CPUs
+#define MAX_MEM 8			  // maximum number of memory regions
+#define MAX_NUMA_NODE MAX_MEM // maximum number of numa nodes
+#define MAX_CORES_PER_NODE 4  // maximum number of cores per numa node
 #define MAX_INFO_STR_LEN 16
-#define MAX_DISTANCE_MAP_ENTRY 64  // maxmum number of distance map entry (8*8)
+#define MAX_DISTANCE_MAP_ENTRY 64 // maxmum number of distance map entry (8*8)
 
 typedef struct {
-    int core_num;
-    uint32_t cores[MAX_CORES_PER_NODE];  // cpu phandle list of the node
+	int		 core_num;
+	uint32_t cores[MAX_CORES_PER_NODE]; // cpu phandle list of the node
 } node_info;
 
 typedef struct {
-    uint32_t phandle;
-    uint32_t cpu_id;
-    uint32_t numa_node_id;
-    char status[MAX_INFO_STR_LEN];
-    char riscv_isa[MAX_INFO_STR_LEN];
-    char mmu_type[MAX_INFO_STR_LEN];
+	uint32_t phandle;
+	uint32_t cpu_id;
+	uint32_t numa_node_id;
+	char	 status[MAX_INFO_STR_LEN];
+	char	 riscv_isa[MAX_INFO_STR_LEN];
+	char	 mmu_type[MAX_INFO_STR_LEN];
 } cpu_info;
 
 typedef struct {
-    uint32_t numa_node_id;
-    uint64_t base_address;
-    uint64_t ram_size;
+	uint32_t numa_node_id;
+	uint64_t base_address;
+	uint64_t ram_size;
 } memory_info;
 
 typedef struct {
-    uint32_t src;
-    uint32_t dst;
-    uint32_t value;
+	uint32_t src;
+	uint32_t dst;
+	uint32_t value;
 } distance;
 
 typedef struct {
-    int cpu_num;
-    cpu_info cpus[MAX_CPU];
-    int mem_num;
-    memory_info memory[MAX_MEM];
-    int node_num;
-    node_info nodes[MAX_CORES_PER_NODE];
-    int distance_entry_num;
-    distance distance_matrix[MAX_DISTANCE_MAP_ENTRY];
+	int			cpu_num;
+	cpu_info	cpus[MAX_CPU];
+	int			mem_num;
+	memory_info memory[MAX_MEM];
+	int			node_num;
+	node_info	nodes[MAX_CORES_PER_NODE];
+	int			distance_entry_num;
+	distance	distance_matrix[MAX_DISTANCE_MAP_ENTRY];
 } device_tree;
 
 /* clang-format off */

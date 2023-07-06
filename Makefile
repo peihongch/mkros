@@ -173,3 +173,17 @@ gdb:
 dts: 
 	$(QEMU) $(QEMUDUMPDTS) $(QEMUOPTS)
 	dtc -o virt.dts -O dts virt.dtb
+
+# 定义源文件目录
+SRC_DIR := .
+# 查找所有.h和.c文件
+HDRS := $(shell find $(SRC_DIR) -name '*.h')
+SRCS := $(shell find $(SRC_DIR) -name '*.c')
+# 定义clang-format命令
+CLANG_FORMAT := clang-format
+# 定义clang-format的参数
+CLANG_FORMAT_FLAGS := -style=file
+# 定义目标规则
+.PHONY: format
+format:
+	@$(CLANG_FORMAT) $(CLANG_FORMAT_FLAGS) -i $(HDRS) $(SRCS)

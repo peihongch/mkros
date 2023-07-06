@@ -23,7 +23,7 @@
 #include "types.h"
 
 #define BACKSPACE 0x100
-#define C(x) ((x) - '@')  // Control-x
+#define C(x) ((x) - '@') // Control-x
 
 //
 // send one character to the uart.
@@ -31,48 +31,49 @@
 // but not from write().
 //
 void console_putchar(int c) {
-    if (c == BACKSPACE) {
-        // if the user typed backspace, overwrite with a space.
-        uartputc_sync('\b');
-        uartputc_sync(' ');
-        uartputc_sync('\b');
-    } else {
-        uartputc_sync(c);
-    }
+	if (c == BACKSPACE) {
+		// if the user typed backspace, overwrite with a space.
+		uartputc_sync('\b');
+		uartputc_sync(' ');
+		uartputc_sync('\b');
+	}
+	else {
+		uartputc_sync(c);
+	}
 }
 
-void console_print(const char* b) {
-    char c;
+void console_print(const char *b) {
+	char c;
 
-    while ((c = *(b++)) != 0)
-        console_putchar(c);
+	while ((c = *(b++)) != 0)
+		console_putchar(c);
 }
 
 struct {
-    struct spinlock lock;
+	struct spinlock lock;
 
-    // input
+	// input
 #define INPUT_BUF_SIZE 128
-    char buf[INPUT_BUF_SIZE];
-    uint r;  // Read index
-    uint w;  // Write index
-    uint e;  // Edit index
+	char buf[INPUT_BUF_SIZE];
+	uint r; // Read index
+	uint w; // Write index
+	uint e; // Edit index
 } cons;
 
 //
 // user write()s to the console go here.
 //
 int console_write(int user_src, uint64_t src, int n) {
-    int i;
+	int i;
 
-    for (i = 0; i < n; i++) {
-        char c;
-        if (either_copyin(&c, user_src, src + i, 1) == -1)
-            break;
-        uartputc(c);
-    }
+	for (i = 0; i < n; i++) {
+		char c;
+		if (either_copyin(&c, user_src, src + i, 1) == -1)
+			break;
+		uartputc(c);
+	}
 
-    return i;
+	return i;
 }
 
 //
@@ -82,51 +83,51 @@ int console_write(int user_src, uint64_t src, int n) {
 // or kernel address.
 //
 int console_read(int user_dst, uint64_t dst, int n) {
-    uint target;
-    int c;
-    char cbuf;
+	uint target;
+	int	 c;
+	char cbuf;
 
-    target = n;
-    acquire(&cons.lock);
-    while (n > 0) {
-        // wait until interrupt handler has put some
-        // input into cons.buffer.
-        while (cons.r == cons.w) {
-            if (killed(this_proc())) {
-                release(&cons.lock);
-                return -1;
-            }
-            sleep(&cons.r, &cons.lock);
-        }
+	target = n;
+	acquire(&cons.lock);
+	while (n > 0) {
+		// wait until interrupt handler has put some
+		// input into cons.buffer.
+		while (cons.r == cons.w) {
+			if (killed(this_proc())) {
+				release(&cons.lock);
+				return -1;
+			}
+			sleep(&cons.r, &cons.lock);
+		}
 
-        c = cons.buf[cons.r++ % INPUT_BUF_SIZE];
+		c = cons.buf[cons.r++ % INPUT_BUF_SIZE];
 
-        if (c == C('D')) {  // end-of-file
-            if (n < target) {
-                // Save ^D for next time, to make sure
-                // caller gets a 0-byte result.
-                cons.r--;
-            }
-            break;
-        }
+		if (c == C('D')) { // end-of-file
+			if (n < target) {
+				// Save ^D for next time, to make sure
+				// caller gets a 0-byte result.
+				cons.r--;
+			}
+			break;
+		}
 
-        // copy the input byte to the user-space buffer.
-        cbuf = c;
-        if (either_copyout(user_dst, dst, &cbuf, 1) == -1)
-            break;
+		// copy the input byte to the user-space buffer.
+		cbuf = c;
+		if (either_copyout(user_dst, dst, &cbuf, 1) == -1)
+			break;
 
-        dst++;
-        --n;
+		dst++;
+		--n;
 
-        if (c == '\n') {
-            // a whole line has arrived, return to
-            // the user-level read().
-            break;
-        }
-    }
-    release(&cons.lock);
+		if (c == '\n') {
+			// a whole line has arrived, return to
+			// the user-level read().
+			break;
+		}
+	}
+	release(&cons.lock);
 
-    return target - n;
+	return target - n;
 }
 
 //
@@ -136,57 +137,57 @@ int console_read(int user_dst, uint64_t dst, int n) {
 // wake up console_read() if a whole line has arrived.
 //
 void console_intr(int c) {
-    acquire(&cons.lock);
+	acquire(&cons.lock);
 
-    switch (c) {
-        case C('P'):  // Print process list.
-            procdump();
-            break;
-        case C('U'):  // Kill line.
-            while (cons.e != cons.w &&
-                   cons.buf[(cons.e - 1) % INPUT_BUF_SIZE] != '\n') {
-                cons.e--;
-                console_putchar(BACKSPACE);
-            }
-            break;
-        case C('H'):  // Backspace
-        case '\x7f':  // Delete key
-            if (cons.e != cons.w) {
-                cons.e--;
-                console_putchar(BACKSPACE);
-            }
-            break;
-        default:
-            if (c != 0 && cons.e - cons.r < INPUT_BUF_SIZE) {
-                c = (c == '\r') ? '\n' : c;
+	switch (c) {
+		case C('P'): // Print process list.
+			procdump();
+			break;
+		case C('U'): // Kill line.
+			while (cons.e != cons.w &&
+				   cons.buf[(cons.e - 1) % INPUT_BUF_SIZE] != '\n') {
+				cons.e--;
+				console_putchar(BACKSPACE);
+			}
+			break;
+		case C('H'): // Backspace
+		case '\x7f': // Delete key
+			if (cons.e != cons.w) {
+				cons.e--;
+				console_putchar(BACKSPACE);
+			}
+			break;
+		default:
+			if (c != 0 && cons.e - cons.r < INPUT_BUF_SIZE) {
+				c = (c == '\r') ? '\n' : c;
 
-                // echo back to the user.
-                console_putchar(c);
+				// echo back to the user.
+				console_putchar(c);
 
-                // store for consumption by console_read().
-                cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
+				// store for consumption by console_read().
+				cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
 
-                if (c == '\n' || c == C('D') ||
-                    cons.e - cons.r == INPUT_BUF_SIZE) {
-                    // wake up console_read() if a whole line (or end-of-file)
-                    // has arrived.
-                    cons.w = cons.e;
-                    wakeup(&cons.r);
-                }
-            }
-            break;
-    }
+				if (c == '\n' || c == C('D') ||
+					cons.e - cons.r == INPUT_BUF_SIZE) {
+					// wake up console_read() if a whole line (or end-of-file)
+					// has arrived.
+					cons.w = cons.e;
+					wakeup(&cons.r);
+				}
+			}
+			break;
+	}
 
-    release(&cons.lock);
+	release(&cons.lock);
 }
 
 void console_init(void) {
-    initlock(&cons.lock, "console");
+	initlock(&cons.lock, "console");
 
-    uartinit();
+	uartinit();
 
-    // connect read and write system calls
-    // to console_read and console_write.
-    devsw[CONSOLE].read = console_read;
-    devsw[CONSOLE].write = console_write;
+	// connect read and write system calls
+	// to console_read and console_write.
+	devsw[CONSOLE].read	 = console_read;
+	devsw[CONSOLE].write = console_write;
 }

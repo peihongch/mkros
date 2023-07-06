@@ -11,8 +11,8 @@
 // 00001000 -- boot ROM, provided by qemu
 // 02000000 -- CLINT
 // 0C000000 -- PLIC
-// 10000000 -- uart0 
-// 10001000 -- virtio disk 
+// 10000000 -- uart0
+// 10001000 -- virtio disk
 // 80000000 -- boot ROM jumps here in machine mode
 //             -kernel loads the kernel here
 // unused RAM after 80000000.
@@ -58,7 +58,7 @@
  * The MTIMECMP registers are located at an offset of 0x4000 from the base address, 
  * and each MTIMECMP register is 8 bytes in size.
  */
-#define CLINT_MTIMECMP(hartid) (CLINT + 0x4000 + 8*(hartid))
+#define CLINT_MTIMECMP(hartid) (CLINT + 0x4000 + 8 * (hartid))
 /**
  * The MTIME register is located at an offset of 0xBFF8 bytes from the base address of the CLINT.
  */
@@ -81,7 +81,7 @@
 
 // map kernel stacks beneath the trampoline,
 // each surrounded by invalid guard pages.
-#define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE)
+#define KSTACK(p) (TRAMPOLINE - ((p) + 1) * 2 * PGSIZE)
 
 // User memory layout.
 // Address zero first:

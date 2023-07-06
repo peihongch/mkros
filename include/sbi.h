@@ -313,37 +313,37 @@ enum sbi_cppc_reg_id {
 /* clang-format on */
 
 #define SBI_ECALL(__eid, __fid, __a0, __a1, __a2)                     \
-    ({                                                                \
-        register unsigned long a0 asm("a0") = (unsigned long)(__a0);  \
-        register unsigned long a1 asm("a1") = (unsigned long)(__a1);  \
-        register unsigned long a2 asm("a2") = (unsigned long)(__a2);  \
-        register unsigned long a6 asm("a6") = (unsigned long)(__fid); \
-        register unsigned long a7 asm("a7") = (unsigned long)(__eid); \
-        asm volatile("ecall"                                          \
-                     : "+r"(a0)                                       \
-                     : "r"(a1), "r"(a2), "r"(a6), "r"(a7)             \
-                     : "memory");                                     \
-        a0;                                                           \
-    })
+	({                                                                \
+		register unsigned long a0 asm("a0") = (unsigned long)(__a0);  \
+		register unsigned long a1 asm("a1") = (unsigned long)(__a1);  \
+		register unsigned long a2 asm("a2") = (unsigned long)(__a2);  \
+		register unsigned long a6 asm("a6") = (unsigned long)(__fid); \
+		register unsigned long a7 asm("a7") = (unsigned long)(__eid); \
+		asm volatile("ecall"                                          \
+					 : "+r"(a0)                                       \
+					 : "r"(a1), "r"(a2), "r"(a6), "r"(a7)             \
+					 : "memory");                                     \
+		a0;                                                           \
+	})
 
 #define SBI_ECALL_0(__eid, __fid) SBI_ECALL(__eid, __fid, 0, 0, 0)
 #define SBI_ECALL_1(__eid, __fid, __a0) SBI_ECALL(__eid, __fid, __a0, 0, 0)
 #define SBI_ECALL_2(__eid, __fid, __a0, __a1) \
-    SBI_ECALL(__eid, __fid, __a0, __a1, 0)
+	SBI_ECALL(__eid, __fid, __a0, __a1, 0)
 #define SBI_ECALL_3(__eid, __fid, __a0, __a1, __a2) \
-    SBI_ECALL(__eid, __fid, __a0, __a1, __a2)
+	SBI_ECALL(__eid, __fid, __a0, __a1, __a2)
 
 #define sbi_ecall_console_putc(c) \
-    SBI_ECALL_1(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, (c))
+	SBI_ECALL_1(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, (c))
 
 #define sbi_ecall_console_getc() SBI_ECALL_0(SBI_EXT_0_1_CONSOLE_GETCHAR, 0)
 
 #define sbi_ecall_set_timer(t) SBI_ECALL_1(SBI_EXT_0_1_SET_TIMER, 0, (t))
 
 #define sbi_ecall_send_ipi(m, b) \
-    SBI_ECALL_2(SBI_EXT_IPI, SBI_EXT_IPI_SEND_IPI, (m), (b))
+	SBI_ECALL_2(SBI_EXT_IPI, SBI_EXT_IPI_SEND_IPI, (m), (b))
 
 #define sbi_ecall_hart_start(h, a, m) \
-    SBI_ECALL_3(SBI_EXT_HSM, SBI_EXT_HSM_HART_START, (h), (a), (m))
+	SBI_ECALL_3(SBI_EXT_HSM, SBI_EXT_HSM_HART_START, (h), (a), (m))
 
-#endif  // _ASM_RISCV_SBI_H_
+#endif // _ASM_RISCV_SBI_H_

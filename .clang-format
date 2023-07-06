@@ -1,16 +1,85 @@
+Language:  Cpp
+BasedOnStyle: LLVM
+
+# 开括号(开圆括号、开尖括号、开方括号)后的对齐: Align, DontAlign, AlwaysBreak(总是在开括号后换行)
+AlignAfterOpenBracket: Align
+# 连续赋值时，对齐所有等号
 AlignConsecutiveAssignments: true
+# 连续声明时，对齐所有声明的变量名
+AlignConsecutiveDeclarations: true
+# 左对齐逃脱换行(使用反斜杠换行)的反斜杠
 AlignEscapedNewlines: Left
+AlignEscapedNewlinesLeft: true
+# 水平对齐二元和三元表达式的操作数
+AlignOperands: true
+# 对齐连续的尾随的注释
 AlignTrailingComments: true
-AllowShortFunctionsOnASingleLine: None
-BraceWrapping:
-  AfterFunction: true
-BreakBeforeBraces: Custom
+# 允许函数声明的所有参数在放在下一行
+AllowAllParametersOfDeclarationOnNextLine: true
+# 允许短的块放在同一行
+AllowShortBlocksOnASingleLine: true
+# 允许短的case标签放在同一行
+AllowShortCaseLabelsOnASingleLine: true
+# 允许短的函数放在同一行: None, InlineOnly(定义在类中), Empty(空函数), Inline(定义在类中，空函数), All
+AllowShortFunctionsOnASingleLine: All
+# 允许短的if语句保持在同一行
+AllowShortIfStatementsOnASingleLine: false
+# 允许短的循环保持在同一行
+AllowShortLoopsOnASingleLine: false
+
+# false表示函数实参要么都在同一行，要么都各自一行
+BinPackArguments:  true
+# false表示所有形参要么都在同一行，要么都各自一行
+BinPackParameters:  false
+# 大括号换行，只有当BreakBeforeBraces设置为Custom时才有效
+BraceWrapping:   
+  # class定义后面
+  AfterClass:  false
+  # 控制语句后面
+  AfterControlStatement:  false
+  # enum定义后面
+  AfterEnum:  false
+  # 函数定义后面
+  AfterFunction:  false
+  # 命名空间定义后面
+  AfterNamespace:  false
+  # ObjC定义后面
+  AfterObjCDeclaration:  false
+  # struct定义后面
+  AfterStruct:  false
+  # union定义后面
+  AfterUnion:  false
+  # catch之前
+  BeforeCatch:  true
+  # else之前
+  BeforeElse:  true
+  # 缩进大括号
+  IndentBraces:  false
+# 在大括号前换行: Attach(始终将大括号附加到周围的上下文), Linux(除函数、命名空间和类定义，与Attach类似), 
+#   Mozilla(除枚举、函数、记录定义，与Attach类似), Stroustrup(除函数定义、catch、else，与Attach类似), 
+#   Allman(总是在大括号前换行), GNU(总是在大括号前换行，并对于控制语句的大括号增加额外的缩进), WebKit(在函数前换行), Custom
+#   注：这里认为语句块也属于函数
+BreakBeforeBraces:  Custom
 BreakStringLiterals: false
-ContinuationIndentWidth: 8
+
+# 每行字符的限制，0表示没有限制
+ColumnLimit:  80
+ContinuationIndentWidth: 4
 Cpp11BracedListStyle: false
-IndentWidth: 8
+
+# 缩进case标签
+IndentCaseLabels: true
+IndentWidth: 4
+
+# 连续空行的最大数量
+MaxEmptyLinesToKeep:  1
+
 ReflowComments: false
+
 SortIncludes: false
+# 在赋值运算符之前添加空格
+SpaceBeforeAssignmentOperators:  true
 SpacesInContainerLiterals: false
-TabWidth: 8
+
+TabWidth: 4
 UseTab: Always

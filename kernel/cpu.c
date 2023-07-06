@@ -9,14 +9,14 @@ struct cpu cpus[MAX_CPU];
 // to prevent race with process being moved
 // to a different CPU.
 int cpu_id() {
-    int id = r_tp();
-    return id;
+	int id = r_tp();
+	return id;
 }
 
 // Return this CPU's cpu struct.
 // Interrupts must be disabled.
-struct cpu* this_cpu(void) {
-    int id = cpu_id();
-    struct cpu* c = &cpus[id];
-    return c;
+struct cpu *this_cpu(void) {
+	int			id = cpu_id();
+	struct cpu *c  = &cpus[id];
+	return c;
 }

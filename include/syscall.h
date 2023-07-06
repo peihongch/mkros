@@ -1,6 +1,8 @@
 #ifndef __SYSCALL_H_
 #define __SYSCALL_H_
 
+/* clang-format off */
+
 // System call numbers
 #define SYS_fork    1
 #define SYS_exit    2
@@ -23,5 +25,7 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+
+/* clang-format on */
 
 #endif // __SYSCALL_H_
